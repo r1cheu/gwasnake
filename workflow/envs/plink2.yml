@@ -1,0 +1,6 @@
+name: base
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - plink2=2.0.0a.6.9

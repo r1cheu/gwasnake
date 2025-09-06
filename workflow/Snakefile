@@ -9,29 +9,54 @@
 configfile: "config/config.yaml"
 
 
-# load rules
-# -----------------------------------------------------
-include: "rules/common.smk"
-include: "rules/process_reads.smk"
+try:
+    HALFSIB = dict()
+    GROUP = []
+    with open(config["halfsib"], "r") as f:
+        for idx, line in enumerate(f, start=1):
+            group = line.strip().split(",")
+            group_name = f"branch{idx:02d}"
+            GROUP.append(group_name)
+            HALFSIB[group_name] = group
+
+except FileNotFoundError:
+    msg = "config/samples.tsv not found. Please ensure it exists and is correctly formatted."
+    raise FileNotFoundError(msg)
 
 
-# optional messages, log and error handling
-# -----------------------------------------------------
+with open(config["phenotype"], "r") as f:
+    line = f.readline()
+    line = line.strip().split("\t")
+    if line[0] != "FID" and line[1] != "IID":
+        msg = "Make sure FID and IID in the first line of phenotype file. And split by tab."
+        raise ValueError(msg)
+    PHENOTYPE = line[2]
+
+
+include: "rules/prepare.smk"
+include: "rules/regenie.smk"
+
+
 onstart:
-    print("\n--- Analysis started ---\n")
-
-
-onsuccess:
-    print("\n--- Workflow finished! ---\n")
-
-
-onerror:
-    print("\n--- An error occurred! ---\n")
+    print(f"{len(GROUP)} groups found in {config['halfsib']}")
+    print(f"Phenotype: {PHENOTYPE}")
+    print(f"Software: {', '.join(config['software'])}")
 
 
 # target rules
 # -----------------------------------------------------
 rule all:
     input:
-        "results/multiqc/multiqc_report.html",
+        # expand(
+        #     "results/{config['run_id']}/summary/{group}.{phenotype}.{software}",
+        #     group=GROUP,
+        #     phenotype=PHENOTYPE,
+        #     software=config["software"],
+        # ),
+        expand(
+            "results/{run_id}/{group}/{phenotype}.png",
+            phenotype=PHENOTYPE,
+            run_id=config["run_id"],
+            group=GROUP,
+        ),
     default_target: True

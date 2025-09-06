@@ -1,8 +1,23 @@
-samplesheet: ".test/config/samples.tsv"
+run_id: "oh_ho"
+halfsib: "config/sample.tsv"
+phenotype: "phenotype/heading_date_NN_final.txt"
 
-get_genome:
-  ncbi_ftp: https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/146/045/GCF_000146045.2_R64/GCF_000146045.2_R64_genomic.fna.gz
+bfile:
+  step1: "bfile/SH_f1_LDfilter"
+  step2: "bfile/SH_f1"
 
-simulate_reads:
-  read_length: 100
-  read_number: 10000
+software:
+  - gcta
+  - regenie
+
+plink:
+  threads: 1
+
+regenie:
+  step1_threads: 8
+  step2_threads: 8
+  bsize: 10000
+
+gcta:
+  grm_threads: 8
+  mlma_threads: 4
