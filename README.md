@@ -31,7 +31,8 @@ To run the workflow from command line, change the working directory. This workfl
 cd gwasnake
 ```
 
-Provide your plink bfile in the `bfile/` directory. The default config file is located at `config/config.yml`.
+Place your plink bfile in the `bfile/` directory and your phenotype file in the `phenotype/` directory. The exact paths are flexible, as long as they match the entries in `config/config.yaml`. The default configuration file is located at `config/config.yml`.
+
 Before running the complete workflow, you can perform a dry run using:
 
 ```bash
@@ -49,13 +50,15 @@ snakemake --sdm conda --conda-create-envs-only
 Run the workflow with 20 cores:
 
 ```bash
-snakemake --cores 20 --sdm conda
+snakemake --cores 20 --sdm conda --keep-going
 ```
 
-It's recommended to run the workflow with slurm, and do not forget to change account in the `slurm/config.yaml` file if you are using slurm.
+`--keep-going` will continue running independent jobs even after a job fails, which is useful if jobs for small populations may fail in `regenie`.
+
+It's recommended to run the workflow with slurm, and do not forget to change the account in the `slurm/config.yaml` file if you are using slurm.
 
 ```bash
-snakemake --sdm conda --profile slurm
+snakemake --sdm conda --profile slurm --keep-going
 
 ```
 

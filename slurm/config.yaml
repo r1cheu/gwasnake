@@ -1,5 +1,5 @@
 executor: "slurm"
-jobs: 600
+jobs: 200
 
 printshellcmds: true
 use-singularity: true
@@ -9,7 +9,7 @@ max-status-checks-per-second: 5
 scheduler: greedy
 local-cores: 1
 default-resources:
-  slurm_partition: "normal"
+  slurm_partition: "normal,fat"
   slurm_account: "rlchen"
   mem_mb: 8192
   nodes: 1
