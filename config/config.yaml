@@ -14,10 +14,11 @@ plink:
   threads: 1
 
 regenie:
-  step1_threads: 8
-  step2_threads: 8
-  bsize: 10000
+  step1_threads: 4
+  step2_threads: 4
+  bsize: 20000
 
 gcta:
-  grm_threads: 8
+  grm_threads: 4
   mlma_threads: 4
+  chromosomes: 12

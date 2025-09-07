@@ -35,6 +35,7 @@ with open(config["phenotype"], "r") as f:
 
 include: "rules/prepare.smk"
 include: "rules/regenie.smk"
+include: "rules/gcta.smk"
 
 
 onstart:
@@ -47,14 +48,16 @@ onstart:
 # -----------------------------------------------------
 rule all:
     input:
-        # expand(
-        #     "results/{config['run_id']}/summary/{group}.{phenotype}.{software}",
-        #     group=GROUP,
-        #     phenotype=PHENOTYPE,
-        #     software=config["software"],
-        # ),
+        # REGENIE results
         expand(
-            "results/{run_id}/{group}/{phenotype}.png",
+            "results/{run_id}/{group}/regenie/{phenotype}.png",
+            phenotype=PHENOTYPE,
+            run_id=config["run_id"],
+            group=GROUP,
+        ),
+        # GCTA results  
+        expand(
+            "results/{run_id}/{group}/gcta/{phenotype}.png",
             phenotype=PHENOTYPE,
             run_id=config["run_id"],
             group=GROUP,

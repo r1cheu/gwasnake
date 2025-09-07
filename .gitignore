@@ -12,3 +12,5 @@ workflow/notebooks/.ipynb_checkpoints/**
 **/Rplots.pdf
 **/bfile/**
 **/phenotype/**
+workflow/scripts/__pycache__
+CLAUDE.md
