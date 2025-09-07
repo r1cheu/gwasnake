@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0 (2025-09-07)
+
+
+### Features
+
+* add support for gcta ([29cb16e](https://github.com/r1cheu/gwasnake/commit/29cb16ec71500b1e560ee4468b4daf1e74f30684))
+* finish of regenie ([486ed9b](https://github.com/r1cheu/gwasnake/commit/486ed9b853adc4cd837fbeadecd6a300f313dd17))
+
 ## [1.1.0](https://github.com/snakemake-workflows/snakemake-workflow-template/compare/v1.0.0...v1.1.0) (2025-07-29)
 
 
