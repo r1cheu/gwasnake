@@ -20,7 +20,7 @@ try:
             HALFSIB[group_name] = group
 
 except FileNotFoundError:
-    msg = "config/samples.tsv not found. Please ensure it exists and is correctly formatted."
+    msg = f"{config["halfsib"]} not found. Please ensure it exists and is correctly formatted."
     raise FileNotFoundError(msg)
 
 

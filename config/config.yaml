@@ -1,5 +1,5 @@
 run_id: "oh_ho"
-halfsib: "config/sample.tsv"
+halfsib: "config/sample.csv"
 phenotype: "phenotype/heading_date_NN_final.txt"
 
 bfile:
