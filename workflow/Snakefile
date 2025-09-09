@@ -50,16 +50,10 @@ rule all:
     input:
         # REGENIE results
         expand(
-            "results/{run_id}/{group}/regenie/{phenotype}.png",
+            "results/{run_id}/{group}/{software}/{phenotype}.png",
             phenotype=PHENOTYPE,
             run_id=config["run_id"],
             group=GROUP,
-        ),
-        # GCTA results  
-        expand(
-            "results/{run_id}/{group}/gcta/{phenotype}.png",
-            phenotype=PHENOTYPE,
-            run_id=config["run_id"],
-            group=GROUP,
+            software=config["software"],
         ),
     default_target: True
