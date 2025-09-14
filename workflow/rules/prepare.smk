@@ -58,7 +58,7 @@ rule clean_pca_eigenvec:
     input:
         pca=rules.pca.output.pca,
     output:
-        covar="results/{run_id}/{group}/common/covar",
+        covar="results/{run_id}/{group}/common/qcovar",
     conda:
         "../envs/base.yml"
     shell:
