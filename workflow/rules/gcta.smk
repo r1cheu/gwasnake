@@ -74,7 +74,7 @@ rule gcta_mlma:
         output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/gcta/{wildcards.phenotype}_{wildcards.chr}",
     shell:
         """
-        gcta64 --mlma --grm {params.grm_full_prefix} --mlma-subtract-grm {params.grm_chr_prefix} --bfile {params.bfile_prefix} --chr {params.chr_num} --pheno {input.phenotype} --out {params.output_prefix} --thread-num {threads} --qcovar {input.qcovar}
+        gcta64 --mlma --grm {params.grm_full_prefix} --mlma-subtract-grm {params.grm_chr_prefix} --bfile {params.bfile_prefix} --chr {params.chr_num} --pheno {input.phenotype} --out {params.output_prefix} --thread-num {threads} --qcovar {input.qcovar} --covar {input.covar}
         """
 
 
