@@ -3,6 +3,7 @@ rule create_sample_list:
     output:
         sample_list="results/{run_id}/{group}/common/sample.list",
         phenotype="results/{run_id}/{group}/common/phenotype",
+        covar="results/{run_id}/{group}/common/covar",
     conda:
         "../envs/base.yml"
     params:
