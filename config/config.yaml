@@ -1,6 +1,6 @@
 run_id: "oh_ho"
 halfsib: "config/sample.csv"
-phenotype: "phenotype/heading_date_NN_final.txt"
+phenotype: "phenotype/heading_date_SH_final_rmgeng.txt"
 
 bfile:
   step1: "bfile/SH_f1_LDfilter"
