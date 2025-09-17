@@ -3,7 +3,6 @@ rule create_sample_list:
     output:
         sample_list="results/{run_id}/{group}/common/sample.list",
         phenotype="results/{run_id}/{group}/common/phenotype",
-        covar="results/{run_id}/{group}/common/covar",
     conda:
         "../envs/base.yml"
     params:
@@ -29,6 +28,7 @@ rule extract_bed_step1:
         """
         plink --bfile {params.step1} --keep {input.sample_list} --maf 0.01 --geno 0.1 --out {params.output_prefix} --make-bed --threads 1
         """
+
 
 rule extract_bed_step2:
     input:
@@ -61,7 +61,6 @@ rule pca:
     params:
         bfile=rules.extract_bed_step1.params.output_prefix,
         comp=config["pca"],
-
     log:
         "logs/{run_id}/{group}/pca.log",
     shell:
