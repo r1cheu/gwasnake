@@ -59,7 +59,8 @@ rule gcta_mlma:
         grm_full=rules.gcta_grm_full.output.grm,
         grm_chr=rules.gcta_grm_chr.output.grm,
         phenotype=rules.create_sample_list.output.phenotype,
-        covar=rules.clean_pca_eigenvec.output.covar,
+        qcovar=rules.clean_pca_eigenvec.output.covar,
+        covar=rules.create_sample_list.output.covar,
     output:
         assoc=temp("results/{run_id}/{group}/gcta/{phenotype}_{chr}.mlma"),
     threads: config["gcta"]["mlma_threads"]
@@ -73,7 +74,7 @@ rule gcta_mlma:
         output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/gcta/{wildcards.phenotype}_{wildcards.chr}",
     shell:
         """
-        gcta64 --mlma --grm {params.grm_full_prefix} --mlma-subtract-grm {params.grm_chr_prefix} --bfile {params.bfile_prefix} --chr {params.chr_num} --pheno {input.phenotype} --out {params.output_prefix} --thread-num {threads} --qcovar {input.covar}
+        gcta64 --mlma --grm {params.grm_full_prefix} --mlma-subtract-grm {params.grm_chr_prefix} --bfile {params.bfile_prefix} --chr {params.chr_num} --pheno {input.phenotype} --out {params.output_prefix} --thread-num {threads} --qcovar {input.qcovar} --covar {input.covar}
         """
 
 

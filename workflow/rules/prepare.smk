@@ -3,6 +3,7 @@ rule create_sample_list:
     output:
         sample_list="results/{run_id}/{group}/common/sample.list",
         phenotype="results/{run_id}/{group}/common/phenotype",
+        covar="results/{run_id}/{group}/common/covar",
     conda:
         "../envs/base.yml"
     params:
@@ -74,7 +75,7 @@ rule clean_pca_eigenvec:
     input:
         pca=rules.pca.output.pca,
     output:
-        covar="results/{run_id}/{group}/common/covar",
+        covar="results/{run_id}/{group}/common/qcovar",
     conda:
         "../envs/base.yml"
     shell:
