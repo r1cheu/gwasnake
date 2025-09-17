@@ -2,7 +2,7 @@
 rule rg_step1:
     input:
         covar=rules.clean_pca_eigenvec.output.covar,
-        bfile=rules.extract_bed.output.bfile,
+        bfile=rules.extract_bed_step1.output.bfile,
         phenotype=rules.create_sample_list.output.phenotype,
     output:
         output=multiext(
@@ -14,7 +14,7 @@ rule rg_step1:
     resources:
         cpus_per_task=threads,
     params:
-        bfile=rules.extract_bed.params.output_prefix,
+        bfile=rules.extract_bed_step1.params.output_prefix,
         bsize=config["regenie"]["bsize"],
         output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/regenie/step1",
     shell:
@@ -27,7 +27,7 @@ rule rg_step1:
 rule rg_step2:
     input:
         covar=rules.clean_pca_eigenvec.output.covar,
-        bfile=rules.extract_bed.output.bfile,
+        bfile=rules.extract_bed_step1.output.bfile,
         phenotype=rules.create_sample_list.output.phenotype,
         step1=rules.rg_step1.output.output,
     output:

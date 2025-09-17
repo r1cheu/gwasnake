@@ -36,6 +36,7 @@ with open(config["phenotype"], "r") as f:
 include: "rules/prepare.smk"
 include: "rules/regenie.smk"
 include: "rules/gcta.smk"
+include: "rules/emmax.smk"
 
 
 onstart:

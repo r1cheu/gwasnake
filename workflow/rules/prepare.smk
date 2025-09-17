@@ -15,7 +15,7 @@ rule create_sample_list:
 
 
 # Extract samples for each group from main bfile
-rule extract_bed:
+rule extract_bed_step1:
     input:
         sample_list=rules.create_sample_list.output.sample_list,
     output:
@@ -27,14 +27,29 @@ rule extract_bed:
         output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/common/step1",
     shell:
         """
-        plink --bfile {params.step1} --keep {input.sample_list} --maf 0.01 --out {params.output_prefix} --make-bed --threads 1
+        plink --bfile {params.step1} --keep {input.sample_list} --maf 0.01 --geno 0.1 --out {params.output_prefix} --make-bed --threads 1
+        """
+
+rule extract_bed_step2:
+    input:
+        sample_list=rules.create_sample_list.output.sample_list,
+    output:
+        bfile=multiext("results/{run_id}/{group}/common/step2", ".bed", ".bim", ".fam"),
+    conda:
+        "../envs/plink.yml"
+    params:
+        step2=config["bfile"]["step2"],
+        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/common/step2",
+    shell:
+        """
+        plink --bfile {params.step2} --keep {input.sample_list} --maf 0.01 --geno 0.1 --out {params.output_prefix} --make-bed --threads 1
         """
 
 
 # Perform PCA analysis for covariates
 rule pca:
     input:
-        bfile=rules.extract_bed.output.bfile,
+        bfile=rules.extract_bed_step1.output.bfile,
     output:
         pca=temp("results/{run_id}/{group}/common/pca.eigenvec"),
         eval=temp("results/{run_id}/{group}/common/pca.eigenval"),
@@ -44,12 +59,14 @@ rule pca:
     resources:
         cpu_per_task=threads,
     params:
-        bfile=rules.extract_bed.params.output_prefix,
+        bfile=rules.extract_bed_step1.params.output_prefix,
+        comp=config["pca"],
+
     log:
         "logs/{run_id}/{group}/pca.log",
     shell:
         """
-        plink2 --bfile {params.bfile} --pca 20 --out results/{wildcards.run_id}/{wildcards.group}/common/pca --threads 2
+        plink2 --bfile {params.bfile} --pca {params.comp} --out results/{wildcards.run_id}/{wildcards.group}/common/pca --threads {threads}
         """
 
 
