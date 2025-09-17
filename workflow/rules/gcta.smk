@@ -5,7 +5,7 @@ wildcard_constraints:
 
 rule gcta_grm_full:
     input:
-        bfile=rules.extract_bed.output.bfile,
+        bfile=rules.extract_bed_step1.output.bfile,
     output:
         grm=temp(
             multiext(
@@ -19,7 +19,7 @@ rule gcta_grm_full:
     resources:
         cpus_per_task=threads,
     params:
-        bfile_prefix=rules.extract_bed.params.output_prefix,
+        bfile_prefix=rules.extract_bed_step1.params.output_prefix,
         output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/gcta/grm_full",
     shell:
         """
@@ -30,7 +30,7 @@ rule gcta_grm_full:
 # Create per-chromosome GRM for leave-one-chromosome-out analysis
 rule gcta_grm_chr:
     input:
-        bfile=rules.extract_bed.output.bfile,
+        bfile=rules.extract_bed_step1.output.bfile,
     output:
         grm=temp(
             multiext(
@@ -44,7 +44,7 @@ rule gcta_grm_chr:
     resources:
         cpus_per_task=threads,
     params:
-        bfile_prefix=rules.extract_bed.params.output_prefix,
+        bfile_prefix=rules.extract_bed_step1.params.output_prefix,
         chr_num=lambda wildcards: int(wildcards.chr),
         output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/gcta/grm_chr{wildcards.chr}",
     shell:

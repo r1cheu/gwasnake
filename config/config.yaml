@@ -1,6 +1,6 @@
-run_id: "oh_ho"
+run_id: "oh_no_1"
 halfsib: "config/sample.csv"
-phenotype: "phenotype/heading_date_NN_final.txt"
+phenotype: "phenotype/heading_date_SH_final_rmgeng.txt"
 
 bfile:
   step1: "bfile/SH_f1_LDfilter"
@@ -8,7 +8,9 @@ bfile:
 
 software:
   - gcta
-  - regenie
+  - emmax
+
+pca: 5
 
 plink:
   threads: 1
@@ -22,3 +24,6 @@ gcta:
   grm_threads: 4
   mlma_threads: 4
   chromosomes: 12
+
+emmax:
+  threads: 1
