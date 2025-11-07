@@ -1,7 +1,7 @@
 import pandas as pd
 
 phenotype = pd.read_csv(snakemake.config["phenotype"], sep="\t")[
-    snakemake.config["phenotype_name"]
+    ["FID", "IID", snakemake.config["phenotype_name"]]
 ]
 halfsib = snakemake.params.halfsib[snakemake.wildcards.group]
 filtered = phenotype[phenotype["IID"].apply(lambda x: any(sub in x for sub in halfsib))]
