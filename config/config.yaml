@@ -1,6 +1,7 @@
 run_id: "oh_no_1"
 halfsib: "config/sample.csv"
 phenotype: "phenotype/heading_date_SH_final_rmgeng.txt"
+phenotype_name: "HD"
 
 bfile:
   step1: "bfile/SH_f1_LDfilter"
@@ -27,3 +28,4 @@ gcta:
 
 emmax:
   threads: 1
+
