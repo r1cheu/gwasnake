@@ -9,7 +9,7 @@ rule gcta_grm_full:
     output:
         grm=temp(
             multiext(
-                "results/{run_id}/{group}/gcta/grm_full",
+                "results/{run_id}/{group}/{phenotype}/gcta/grm_full",
                 ".grm.bin",
                 ".grm.id",
                 ".grm.N.bin",
@@ -20,7 +20,7 @@ rule gcta_grm_full:
         cpus_per_task=threads,
     params:
         bfile_prefix=rules.extract_bed_step1.params.output_prefix,
-        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/gcta/grm_full",
+        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/gcta/grm_full",
     shell:
         """
         gcta64 --bfile {params.bfile_prefix} --make-grm --out {params.output_prefix} --threads {threads}
@@ -34,7 +34,7 @@ rule gcta_grm_chr:
     output:
         grm=temp(
             multiext(
-                "results/{run_id}/{group}/gcta/grm_chr{chr}",
+                "results/{run_id}/{group}/{phenotype}/gcta/grm_chr{chr}",
                 ".grm.bin",
                 ".grm.id",
                 ".grm.N.bin",
@@ -46,7 +46,7 @@ rule gcta_grm_chr:
     params:
         bfile_prefix=rules.extract_bed_step1.params.output_prefix,
         chr_num=lambda wildcards: int(wildcards.chr),
-        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/gcta/grm_chr{wildcards.chr}",
+        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/gcta/grm_chr{wildcards.chr}",
     shell:
         """
         gcta64 --bfile {params.bfile_prefix} --make-grm --chr {params.chr_num} --out {params.output_prefix} --threads {threads}
@@ -61,16 +61,16 @@ rule gcta_mlma:
         phenotype=rules.create_sample_list.output.phenotype,
         qcovar=rules.clean_pca_eigenvec.output.covar,
     output:
-        assoc=temp("results/{run_id}/{group}/gcta/{phenotype}_{chr}.mlma"),
+        assoc=temp(r"results/{run_id}/{group}/{phenotype}/gcta/{chr, \d+}.mlma"),
     threads: config["gcta"]["mlma_threads"]
     resources:
         cpus_per_task=threads,
     params:
         bfile_prefix=config["bfile"]["step2"],
-        grm_full_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/gcta/grm_full",
-        grm_chr_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/gcta/grm_chr{wildcards.chr}",
+        grm_full_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/gcta/grm_full",
+        grm_chr_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/gcta/grm_chr{wildcards.chr}",
         chr_num=lambda wildcards: int(wildcards.chr),
-        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/gcta/{wildcards.phenotype}_{wildcards.chr}",
+        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/gcta/{wildcards.chr}",
     shell:
         """
         gcta64 --mlma --grm {params.grm_full_prefix} --mlma-subtract-grm {params.grm_chr_prefix} --bfile {params.bfile_prefix} --chr {params.chr_num} --pheno {input.phenotype} --out {params.output_prefix} --thread-num {threads} --qcovar {input.qcovar}
@@ -81,14 +81,14 @@ rule gcta_mlma:
 rule merge_gcta_results:
     input:
         lambda wildcards: expand(
-            "results/{run_id}/{group}/gcta/{phenotype}_{chr}.mlma",
+            "results/{run_id}/{group}/{phenotype}/gcta/{chr}.mlma",
             run_id=wildcards.run_id,
             phenotype=wildcards.phenotype,
             group=wildcards.group,
             chr=range(1, config["gcta"]["chromosomes"] + 1),
         ),
     output:
-        merged="results/{run_id}/{group}/gcta/{phenotype}.mlma",
+        merged="results/{run_id}/{group}/{phenotype}/gcta/assoc.mlma",
     conda:
         "../envs/base.yml"
     shell:
@@ -103,9 +103,9 @@ rule merge_gcta_results:
 # Generate Manhattan plot from GCTA MLMA results
 rule plot_gcta:
     input:
-        summary="results/{run_id}/{group}/gcta/{phenotype}.mlma",
+        summary="results/{run_id}/{group}/{phenotype}/gcta/assoc.mlma",
     output:
-        png="results/{run_id}/{group}/gcta/{phenotype}.png",
+        png="results/{run_id}/{group}/{phenotype}/gcta/manhattan.png",
     conda:
         "../envs/base.yml"
     script:

@@ -1,15 +1,16 @@
 run_id: "oh_no_1"
 halfsib: "config/sample.csv"
-phenotype: "phenotype/heading_date_SH_final_rmgeng.txt"
-phenotype_name: "HD"
+phenotype: "phenotype/SH_phenotypes_mean_IDmapped.tsv"
+phenotype_names: ["叶长", "株高"]
 
 bfile:
   step1: "bfile/SH_f1_LDfilter"
   step2: "bfile/SH_f1"
 
 software:
-  - gcta
+  # - gcta
   - emmax
+# - regenie
 
 pca: 5
 
@@ -28,4 +29,3 @@ gcta:
 
 emmax:
   threads: 1
-

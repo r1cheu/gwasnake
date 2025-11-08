@@ -30,7 +30,7 @@ with open(config["phenotype"], "r") as f:
     if line[0] != "FID" and line[1] != "IID":
         msg = "Make sure FID and IID in the first line of phenotype file. And split by tab."
         raise ValueError(msg)
-    PHENOTYPE = line[2]
+PHENOTYPE = config["phenotype_names"]
 
 
 include: "rules/prepare.smk"
@@ -51,7 +51,7 @@ rule all:
     input:
         # REGENIE results
         expand(
-            "results/{run_id}/{group}/{software}/{phenotype}.png",
+            "results/{run_id}/{group}/{phenotype}/{software}/manhattan.png",
             phenotype=PHENOTYPE,
             run_id=config["run_id"],
             group=GROUP,
