@@ -1,7 +1,34 @@
-run_id: "oh_no_1"
-halfsib: "config/sample.csv"
-phenotype: "phenotype/SH_phenotypes_mean_IDmapped.tsv"
-phenotype_names: ["叶长", "株高"]
+run_id: "SH_1112"
+halfsib: "config/sample_3samples.csv"
+phenotype: "phenotype/SH_phenotypes_1112.tsv"
+phenotype_names:
+  [
+    "PlantHeight",
+    "StemLength",
+    "PanicleNeckLength",
+    "FlagLeafLength",
+    "FlagLeafWidth",
+    "PanicleNumber",
+    "Awn",
+    "StemDiameterLength",
+    "StemDiameterWidth",
+    "StrawWeight",
+    "GrainToStrawRatio",
+    "YieldPerPlant",
+    "KiloGrainWeight",
+    "SeedSettingRate",
+    "TotalGrainNumberPerPanicle",
+    "FullGrainNumberPerPanicle",
+    "TotalGrainNumber",
+    "EmptyGrainNumber",
+    "FullGrainNumber",
+    "GrainShape",
+    "GrainLength",
+    "GrainWidth",
+    "GrainArea",
+    "Perimeter",
+    "Roundness",
+  ]
 
 bfile:
   step1: "bfile/SH_f1_LDfilter"
@@ -18,13 +45,13 @@ plink:
   threads: 1
 
 regenie:
-  step1_threads: 4
-  step2_threads: 4
+  step1_threads: 1
+  step2_threads: 1
   bsize: 20000
 
 gcta:
-  grm_threads: 4
-  mlma_threads: 4
+  grm_threads: 1
+  mlma_threads: 1
   chromosomes: 12
 
 emmax:
