@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 
 
 def manhattan_plot(
@@ -19,7 +18,7 @@ def manhattan_plot(
 ):
     """
     Create a Manhattan plot from GWAS results.
-    
+
     Parameters:
     -----------
     data : pandas.DataFrame
@@ -119,6 +118,7 @@ def manhattan_plot(
                 color=colors[num % len(colors)],
                 ax=ax,
                 s=10,
+                alpha=0.7,
             )
 
         ax.spines["top"].set_visible(False)
@@ -142,3 +142,4 @@ def manhattan_plot(
         fig.savefig(output_file, dpi=300, bbox_inches="tight")
 
     plt.close()
+

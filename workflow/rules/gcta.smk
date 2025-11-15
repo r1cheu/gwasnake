@@ -3,13 +3,13 @@ wildcard_constraints:
     phenotype="[^_]+",
 
 
-rule gcta_grm_full:
+rule gcta_grm_add:
     input:
         bfile=rules.extract_bed_step1.output.bfile,
     output:
         grm=temp(
             multiext(
-                "results/{run_id}/{group}/{phenotype}/gcta/grm_full",
+                "results/{run_id}/{group}/{phenotype}/gcta/grm",
                 ".grm.bin",
                 ".grm.id",
                 ".grm.N.bin",
@@ -20,7 +20,7 @@ rule gcta_grm_full:
         cpus_per_task=threads,
     params:
         bfile_prefix=rules.extract_bed_step1.params.output_prefix,
-        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/gcta/grm_full",
+        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/gcta/grm",
     shell:
         """
         gcta64 --bfile {params.bfile_prefix} --make-grm --out {params.output_prefix} --threads {threads}
@@ -28,16 +28,16 @@ rule gcta_grm_full:
 
 
 # Create per-chromosome GRM for leave-one-chromosome-out analysis
-rule gcta_grm_chr:
+rule gcta_grm_dom:
     input:
         bfile=rules.extract_bed_step1.output.bfile,
     output:
         grm=temp(
             multiext(
-                "results/{run_id}/{group}/{phenotype}/gcta/grm_chr{chr}",
-                ".grm.bin",
-                ".grm.id",
-                ".grm.N.bin",
+                "results/{run_id}/{group}/{phenotype}/gcta/grm",
+                ".d.grm.bin",
+                ".d.grm.id",
+                ".d.grm.N.bin",
             )
         ),
     threads: config["gcta"]["grm_threads"]
@@ -45,61 +45,51 @@ rule gcta_grm_chr:
         cpus_per_task=threads,
     params:
         bfile_prefix=rules.extract_bed_step1.params.output_prefix,
-        chr_num=lambda wildcards: int(wildcards.chr),
-        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/gcta/grm_chr{wildcards.chr}",
+        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/gcta/grm",
     shell:
         """
-        gcta64 --bfile {params.bfile_prefix} --make-grm --chr {params.chr_num} --out {params.output_prefix} --threads {threads}
+        gcta64 --bfile {params.bfile_prefix} --make-grm-d --out {params.output_prefix} --threads {threads}
+        """
+
+
+rule create_grm_txt:
+    input:
+        grm_add=rules.gcta_grm_add.output.grm,
+        grm=rules.gcta_grm_dom.output.grm,
+    output:
+        txt="results/{run_id}/{group}/{phenotype}/gcta/grm.txt",
+    params:
+        prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/gcta/grm",
+    shell:
+        """
+        echo '{params.prefix}\n{params.prefix}.d' > {output.txt}
         """
 
 
 # Perform MLMA (Mixed Linear Model Association) with GRM subtraction
 rule gcta_mlma:
     input:
-        grm_full=rules.gcta_grm_full.output.grm,
-        grm_chr=rules.gcta_grm_chr.output.grm,
+        grm_a=rules.gcta_grm_add.output.grm,
+        grm_d=rules.gcta_grm_dom.output.grm,
+        grm=rules.create_grm_txt.output.txt,
         phenotype=rules.create_sample_list.output.phenotype,
         qcovar=rules.clean_pca_eigenvec.output.covar,
+        bfile=rules.extract_bed_step2.output.bfile,
     output:
-        assoc=temp(r"results/{run_id}/{group}/{phenotype}/gcta/{chr, \d+}.mlma"),
+        assoc="results/{run_id}/{group}/{phenotype}/gcta/assoc.mlma",
     threads: config["gcta"]["mlma_threads"]
     resources:
         cpus_per_task=threads,
     params:
-        bfile_prefix=config["bfile"]["step2"],
-        grm_full_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/gcta/grm_full",
-        grm_chr_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/gcta/grm_chr{wildcards.chr}",
-        chr_num=lambda wildcards: int(wildcards.chr),
-        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/gcta/{wildcards.chr}",
+        bfile_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/common/step2",
+        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/gcta/assoc",
     shell:
         """
-        gcta64 --mlma --grm {params.grm_full_prefix} --mlma-subtract-grm {params.grm_chr_prefix} --bfile {params.bfile_prefix} --chr {params.chr_num} --pheno {input.phenotype} --out {params.output_prefix} --thread-num {threads} --qcovar {input.qcovar}
+        gcta64 --mlma --mgrm {input.grm} --bfile {params.bfile_prefix} --pheno {input.phenotype} --out {params.output_prefix} --thread-num {threads} --qcovar {input.qcovar}
         """
 
 
 # Merge chromosome-specific MLMA results into a single file
-rule merge_gcta_results:
-    input:
-        lambda wildcards: expand(
-            "results/{run_id}/{group}/{phenotype}/gcta/{chr}.mlma",
-            run_id=wildcards.run_id,
-            phenotype=wildcards.phenotype,
-            group=wildcards.group,
-            chr=range(1, config["gcta"]["chromosomes"] + 1),
-        ),
-    output:
-        merged="results/{run_id}/{group}/{phenotype}/gcta/assoc.mlma",
-    conda:
-        "../envs/base.yml"
-    shell:
-        """
-        head -n 1 {input[0]} > {output.merged}
-        for file in {input}; do
-            tail -n +2 "$file" >> {output.merged}
-        done
-        """
-
-
 # Generate Manhattan plot from GCTA MLMA results
 rule plot_gcta:
     input:

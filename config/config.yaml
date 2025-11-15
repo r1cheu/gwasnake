@@ -1,6 +1,6 @@
 run_id: "SH_1112"
 halfsib: "config/sample_3samples.csv"
-phenotype: "phenotype/SH_phenotypes_1112.tsv"
+phenotype: "phenotype/SH_phenotypes_1112_clean.tsv"
 phenotype_names:
   [
     "PlantHeight",
@@ -9,7 +9,6 @@ phenotype_names:
     "FlagLeafLength",
     "FlagLeafWidth",
     "PanicleNumber",
-    "Awn",
     "StemDiameterLength",
     "StemDiameterWidth",
     "StrawWeight",
@@ -35,8 +34,8 @@ bfile:
   step2: "bfile/SH_f1"
 
 software:
-  # - gcta
-  - emmax
+  - gcta
+#  - emmax
 # - regenie
 
 pca: 5
@@ -52,7 +51,6 @@ regenie:
 gcta:
   grm_threads: 1
   mlma_threads: 1
-  chromosomes: 12
 
 emmax:
   threads: 1
