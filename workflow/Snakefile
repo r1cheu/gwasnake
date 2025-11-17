@@ -30,7 +30,7 @@ with open(config["phenotype"], "r") as f:
     if line[0] != "FID" and line[1] != "IID":
         msg = "Make sure FID and IID in the first line of phenotype file. And split by tab."
         raise ValueError(msg)
-PHENOTYPE = config["phenotype_names"]
+PHENOTYPE = list(config["phenotype_setting"].keys())
 
 
 include: "rules/prepare.smk"

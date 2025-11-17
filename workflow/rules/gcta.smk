@@ -55,14 +55,19 @@ rule gcta_grm_dom:
 rule create_grm_txt:
     input:
         grm_add=rules.gcta_grm_add.output.grm,
-        grm=rules.gcta_grm_dom.output.grm,
+        grm_d=lambda wildcards: rules.gcta_grm_dom.output.grm if config["phenotype_setting"][wildcards.phenotype] == "dom" else [],
     output:
         txt="results/{run_id}/{group}/{phenotype}/gcta/grm.txt",
     params:
         prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/gcta/grm",
+        phenotype_setting=lambda wildcards: config["phenotype_setting"][wildcards.phenotype],
     shell:
         """
-        echo '{params.prefix}\n{params.prefix}.d' > {output.txt}
+        if [ "{params.phenotype_setting}" = "dom" ]; then
+            echo '{params.prefix}\n{params.prefix}.d' > {output.txt}
+        else
+            echo '{params.prefix}' > {output.txt}
+        fi
         """
 
 
@@ -70,7 +75,7 @@ rule create_grm_txt:
 rule gcta_mlma:
     input:
         grm_a=rules.gcta_grm_add.output.grm,
-        grm_d=rules.gcta_grm_dom.output.grm,
+        grm_d=lambda wildcards: rules.gcta_grm_dom.output.grm if config["phenotype_setting"][wildcards.phenotype] == "dom" else [],
         grm=rules.create_grm_txt.output.txt,
         phenotype=rules.create_sample_list.output.phenotype,
         qcovar=rules.clean_pca_eigenvec.output.covar,

@@ -1,33 +1,31 @@
 run_id: "SH_1112"
 halfsib: "config/sample_3samples.csv"
 phenotype: "phenotype/SH_phenotypes_1112_clean.tsv"
-phenotype_names:
-  [
-    "PlantHeight",
-    "StemLength",
-    "PanicleNeckLength",
-    "FlagLeafLength",
-    "FlagLeafWidth",
-    "PanicleNumber",
-    "StemDiameterLength",
-    "StemDiameterWidth",
-    "StrawWeight",
-    "GrainToStrawRatio",
-    "YieldPerPlant",
-    "KiloGrainWeight",
-    "SeedSettingRate",
-    "TotalGrainNumberPerPanicle",
-    "FullGrainNumberPerPanicle",
-    "TotalGrainNumber",
-    "EmptyGrainNumber",
-    "FullGrainNumber",
-    "GrainShape",
-    "GrainLength",
-    "GrainWidth",
-    "GrainArea",
-    "Perimeter",
-    "Roundness",
-  ]
+phenotype_setting:
+  PlantHeight: "dom"
+  StemLength: "dom"
+  PanicleNeckLength: "dom"
+  FlagLeafLength: "add"
+  FlagLeafWidth: "add"
+  PanicleNumber: "add"
+  StemDiameterLength: "dom"
+  StemDiameterWidth: "add"
+  StrawWeight: "dom"
+  GrainToStrawRatio: "dom"
+  YieldPerPlant: "dom"
+  KiloGrainWeight: "dom"
+  SeedSettingRate: "dom"
+  TotalGrainNumberPerPanicle: "dom"
+  FullGrainNumberPerPanicle: "dom"
+  TotalGrainNumber: "dom"
+  EmptyGrainNumber: "dom"
+  FullGrainNumber: "dom"
+  GrainShape: "add"
+  GrainLength: "add"
+  GrainWidth: "add"
+  GrainArea: "add"
+  Perimeter: "add"
+  Roundness: "add"
 
 bfile:
   step1: "bfile/SH_f1_LDfilter"
