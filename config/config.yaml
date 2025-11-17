@@ -5,7 +5,7 @@ phenotype_setting:
   PlantHeight: "dom"
   StemLength: "dom"
   PanicleNeckLength: "dom"
-  FlagLeafLength: "add"
+  FlagLeafLength: "dom"
   FlagLeafWidth: "add"
   PanicleNumber: "add"
   StemDiameterLength: "dom"
