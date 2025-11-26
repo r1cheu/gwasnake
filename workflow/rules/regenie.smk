@@ -33,6 +33,7 @@ rule rg_step2:
         bfile=rules.extract_bed_step1.output.bfile,
         phenotype=rules.create_sample_list.output.phenotype,
         step1=rules.rg_step1.output.output,
+        bfile_2=rules.extract_bed_step2.output.bfile,
     output:
         output="results/{run_id}/{group}/{phenotype}/regenie/step2_{phenotype}.regenie",
     threads: config["regenie"]["step2_threads"]
@@ -41,7 +42,7 @@ rule rg_step2:
     conda:
         "../envs/regenie.yml"
     params:
-        bfile=config["bfile"]["step2"],
+        bfile=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/common/step2",
         bsize=config["regenie"]["bsize"],
         prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/regenie",
     shell:
