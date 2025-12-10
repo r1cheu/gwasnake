@@ -73,7 +73,7 @@ rule emmax_kin:
     input:
         tfile=rules.create_step1_tfam.output.tfile,
     output:
-        IBS_kinf="results/{run_id}/{group}/{phenotype}/emmax/step1.aIBS.kinf",
+        IBS_kinf=temp("results/{run_id}/{group}/{phenotype}/emmax/step1.aIBS.kinf"),
     threads: config["emmax"]["threads"]
     resources:
         cpus_per_task=threads,
@@ -90,7 +90,9 @@ rule emmax_pheno:
         phenofile=rules.create_sample_list.output.phenotype,
         fam_file="results/{run_id}/{group}/{phenotype}/common/step1.fam",
     output:
-        emmax_pheno="results/{run_id}/{group}/{phenotype}/emmax/{phenotype}_emmax_fit.txt",
+        emmax_pheno=temp(
+            "results/{run_id}/{group}/{phenotype}/emmax/{phenotype}_emmax_fit.txt"
+        ),
     conda:
         "../envs/base.yml"
     params:

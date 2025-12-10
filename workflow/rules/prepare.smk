@@ -18,8 +18,13 @@ rule extract_bed_step1:
     input:
         sample_list=rules.create_sample_list.output.sample_list,
     output:
-        bfile=multiext(
-            "results/{run_id}/{group}/{phenotype}/common/step1", ".bed", ".bim", ".fam"
+        bfile=temp(
+            multiext(
+                "results/{run_id}/{group}/{phenotype}/common/step1",
+                ".bed",
+                ".bim",
+                ".fam",
+            )
         ),
     conda:
         "../envs/plink.yml"
@@ -38,8 +43,13 @@ rule extract_bed_step2:
     input:
         sample_list=rules.create_sample_list.output.sample_list,
     output:
-        bfile=multiext(
-            "results/{run_id}/{group}/{phenotype}/common/step2", ".bed", ".bim", ".fam"
+        bfile=temp(
+            multiext(
+                "results/{run_id}/{group}/{phenotype}/common/step2",
+                ".bed",
+                ".bim",
+                ".fam",
+            )
         ),
     conda:
         "../envs/plink.yml"
@@ -83,7 +93,7 @@ rule clean_pca_eigenvec:
     input:
         pca=rules.pca.output.pca,
     output:
-        covar="results/{run_id}/{group}/{phenotype}/common/qcovar",
+        covar=temp("results/{run_id}/{group}/{phenotype}/common/qcovar")),
     conda:
         "../envs/base.yml"
     shell:
