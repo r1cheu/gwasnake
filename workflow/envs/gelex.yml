@@ -1,6 +1,6 @@
 name: base
 channels:
   - conda-forge
-  - bioconda
+  - https://prefix.dev/gelex
 dependencies:
-  - regenie=4.1.1
+  - gelex=0.10.1

@@ -31,24 +31,38 @@ bfile:
   step1: "bfile/SH_f1_LDfilter"
   step2: "bfile/SH_f1"
 
-software:
-  - gcta
-#  - emmax
-# - regenie
-
 pca: 5
 
 plink:
   threads: 1
 
-regenie:
-  step1_threads: 1
-  step2_threads: 1
-  bsize: 20000
+# per-phenotype transform (phenotypes not listed = no transform)
+transform:
+  PlantHeight: "iint"
+  StemLength: "iint"
+  PanicleNeckLength: "iint"
+  FlagLeafLength: "iint"
+  FlagLeafWidth: "iint"
+  PanicleNumber: "iint"
+  StemDiameterLength: "iint"
+  StemDiameterWidth: "iint"
+  StrawWeight: "iint"
+  GrainToStrawRatio: "iint"
+  YieldPerPlant: "iint"
+  KiloGrainWeight: "ii"
+  SeedSettingRate: "iint"
+  TotalGrainNumberPerPanicle: "iint"
+  FullGrainNumberPerPanicle: "iint"
+  TotalGrainNumber: "iint"
+  EmptyGrainNumber: "iint"
+  FullGrainNumber: "iint"
+  GrainShape: "iint"
+  GrainLength: "iint"
+  GrainWidth: "iint"
+  GrainArea: "iint"
+  Perimeter: "iint"
+  Roundness: "iint"
 
-gcta:
+gelex:
   grm_threads: 1
-  mlma_threads: 1
-
-emmax:
-  threads: 1
+  assoc_threads: 1

@@ -31,30 +31,33 @@ with open(config["phenotype"], "r") as f:
         msg = "Make sure FID and IID in the first line of phenotype file. And split by tab."
         raise ValueError(msg)
 PHENOTYPE = list(config["phenotype_setting"].keys())
+DOM_PHENOTYPE = [p for p, m in config["phenotype_setting"].items() if m == "dom"]
 
 
 include: "rules/prepare.smk"
-include: "rules/regenie.smk"
-include: "rules/gcta.smk"
-include: "rules/emmax.smk"
+include: "rules/gelex.smk"
 
 
 onstart:
     print(f"{len(GROUP)} groups found in {config['halfsib']}")
     print(f"Phenotype: {PHENOTYPE}")
-    print(f"Software: {', '.join(config['software'])}")
+    print(f"DOM Phenotype: {DOM_PHENOTYPE}")
 
 
 # target rules
 # -----------------------------------------------------
 rule all:
     input:
-        # REGENIE results
         expand(
-            "results/{run_id}/{group}/{phenotype}/{software}/manhattan.png",
+            "results/{run_id}/{group}/{phenotype}/add_manhattan.png",
             phenotype=PHENOTYPE,
             run_id=config["run_id"],
             group=GROUP,
-            software=config["software"],
+        ),
+        expand(
+            "results/{run_id}/{group}/{phenotype}/dom_manhattan.png",
+            phenotype=DOM_PHENOTYPE,
+            run_id=config["run_id"],
+            group=GROUP,
         ),
     default_target: True
