@@ -1,6 +1,6 @@
 run_id: "SH_1112"
-halfsib: "config/sample_3samples.csv"
-phenotype: "phenotype/SH_phenotypes_1112_clean.tsv"
+halfsib: "config/empty.csv"
+phenotype: "phenotype/sh_f1_latest.phen"
 phenotype_setting:
   PlantHeight: "dom"
   StemLength: "dom"
@@ -28,8 +28,8 @@ phenotype_setting:
   Roundness: "add"
 
 bfile:
-  step1: "bfile/SH_f1_LDfilter"
-  step2: "bfile/SH_f1"
+  step1: "bfile/f1_1570_imputed_lowcoverageflt_fltdup_LDfilter"
+  step2: "bfile/f1_1570_imputed_lowcoverageflt_fltdup"
 
 pca: 5
 

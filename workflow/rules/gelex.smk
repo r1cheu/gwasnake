@@ -66,6 +66,7 @@ rule gelex_grm_dom:
 rule gelex_assoc_add:
     input:
         grm_add=rules.gelex_grm_add.output.grm,
+        grm_loco=rules.gelex_grm_add.output.loco,
         phenotype=rules.create_sample_list.output.phenotype,
         qcovar=rules.clean_pca_eigenvec.output.covar,
         bfile=rules.extract_bed_step2.output.bfile,
@@ -95,6 +96,8 @@ rule gelex_assoc_dom:
     input:
         grm_add=rules.gelex_grm_add.output.grm,
         grm_dom=rules.gelex_grm_dom.output.grm,
+        grm_add_loco=rules.gelex_grm_add.output.loco,
+        grm_dom_loco=rules.gelex_grm_dom.output.loco,
         phenotype=rules.create_sample_list.output.phenotype,
         qcovar=rules.clean_pca_eigenvec.output.covar,
         bfile=rules.extract_bed_step2.output.bfile,
