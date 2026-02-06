@@ -21,6 +21,7 @@ rule gelex_grm_add:
     shell:
         """
         gelex grm -b {params.bfile_prefix} --add -o {params.output_prefix} -t {threads}
+        gelex grm -b {params.bfile_prefix} --add -o {params.output_prefix} -t {threads} --loco
         """
 
 
@@ -42,6 +43,7 @@ rule gelex_grm_dom:
     shell:
         """
         gelex grm -b {params.bfile_prefix} --dom -o {params.output_prefix} -t {threads}
+        gelex grm -b {params.bfile_prefix} --dom -o {params.output_prefix} -t {threads} --loco
         """
 
 
@@ -69,7 +71,7 @@ rule gelex_assoc_add:
         ),
     shell:
         """
-        gelex assoc -b {params.bfile_prefix} -p {input.phenotype} --grm {params.grm_prefix}.add {params.transform} --qcovar {input.qcovar} -o {params.output_prefix} -t {threads}
+        gelex assoc -b {params.bfile_prefix} -p {input.phenotype} --grm {params.grm_prefix}.add {params.transform} --qcovar {input.qcovar} -o {params.output_prefix} -t {threads} --loco
         """
 
 
@@ -98,7 +100,7 @@ rule gelex_assoc_dom:
         ),
     shell:
         """
-        gelex assoc -b {params.bfile_prefix} -p {input.phenotype} --grm {params.grm_prefix}.add {params.grm_prefix}.dom --model d {params.transform} --qcovar {input.qcovar} -o {params.output_prefix} -t {threads}
+        gelex assoc -b {params.bfile_prefix} -p {input.phenotype} --grm {params.grm_prefix}.add {params.grm_prefix}.dom --model d {params.transform} --qcovar {input.qcovar} -o {params.output_prefix} -t {threads} --loco
         """
 
 
