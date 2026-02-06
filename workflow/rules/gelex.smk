@@ -10,6 +10,13 @@ rule gelex_grm_add:
         grm=temp(
             multiext("results/{run_id}/{group}/{phenotype}/grm", ".add.bin", ".add.id")
         ),
+        loco=temp(
+            expand(
+                "results/{{run_id}}/{{group}}/{{phenotype}}/grm.add.chr{chr}.{ext}",
+                chr=range(1, 13),
+                ext=["bin", "id"],
+            )
+        ),
     threads: config["gelex"]["grm_threads"]
     resources:
         cpus_per_task=threads,
@@ -18,10 +25,11 @@ rule gelex_grm_add:
     params:
         bfile_prefix=rules.extract_bed_step1.params.output_prefix,
         output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/grm.add",
+        output_prefix_loco=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/grm",
     shell:
         """
         gelex grm -b {params.bfile_prefix} --add -o {params.output_prefix} -t {threads}
-        gelex grm -b {params.bfile_prefix} --add -o {params.output_prefix} -t {threads} --loco
+        gelex grm -b {params.bfile_prefix} --add -o {params.output_prefix_loco} -t {threads} --loco
         """
 
 
@@ -32,6 +40,13 @@ rule gelex_grm_dom:
         grm=temp(
             multiext("results/{run_id}/{group}/{phenotype}/grm", ".dom.bin", ".dom.id")
         ),
+        loco=temp(
+            expand(
+                "results/{{run_id}}/{{group}}/{{phenotype}}/grm.dom.chr{chr}.{ext}",
+                chr=range(1, 13),
+                ext=["bin", "id"],
+            )
+        ),
     threads: config["gelex"]["grm_threads"]
     resources:
         cpus_per_task=threads,
@@ -40,10 +55,11 @@ rule gelex_grm_dom:
     params:
         bfile_prefix=rules.extract_bed_step1.params.output_prefix,
         output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/grm.dom",
+        output_prefix_loco=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/grm",
     shell:
         """
         gelex grm -b {params.bfile_prefix} --dom -o {params.output_prefix} -t {threads}
-        gelex grm -b {params.bfile_prefix} --dom -o {params.output_prefix} -t {threads} --loco
+        gelex grm -b {params.bfile_prefix} --dom -o {params.output_prefix_loco} -t {threads} --loco
         """
 
 
