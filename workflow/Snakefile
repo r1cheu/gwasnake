@@ -63,9 +63,10 @@ rule all:
             group=GROUP,
         ),
         expand(
-            "results/{run_id}/{group}/{phenotype}/joint_manhattan.png",
+            "results/{run_id}/{group}/{phenotype}/joint_manhattan_{suffix}.png",
             phenotype=JOINT_PHENOTYPE,
             run_id=config["run_id"],
             group=GROUP,
+            suffix=["A", "D"],
         ),
     default_target: True

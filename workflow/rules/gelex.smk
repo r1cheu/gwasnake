@@ -100,6 +100,24 @@ rule plot_gelex:
         summary="results/{run_id}/{group}/{phenotype}/{model}_assoc.gwas.tsv",
     output:
         png="results/{run_id}/{group}/{phenotype}/{model}_manhattan.png",
+    wildcard_constraints:
+        model="add|dom",
+    params:
+        mode="{model}",
+    conda:
+        "../envs/base.yml"
+    script:
+        "../scripts/plot_gelex_result.py"
+
+
+rule plot_gelex_joint:
+    input:
+        summary="results/{run_id}/{group}/{phenotype}/joint_assoc.gwas.tsv",
+    output:
+        png_a="results/{run_id}/{group}/{phenotype}/joint_manhattan_A.png",
+        png_d="results/{run_id}/{group}/{phenotype}/joint_manhattan_D.png",
+    params:
+        mode="joint",
     conda:
         "../envs/base.yml"
     script:
