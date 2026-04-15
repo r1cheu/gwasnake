@@ -3,4 +3,4 @@ channels:
   - conda-forge
   - https://prefix.dev/gelex
 dependencies:
-  - gelex=0.12.0
+  - gelex=0.14.2

@@ -1,18 +1,61 @@
 wildcard_constraints:
     phenotype="[^_]+",
-    model="add|dom",
+    model="add|dom|joint",
+    grm_type="add|dom",
 
 
-rule gelex_grm_add:
+def _get_transform(wildcards):
+    if wildcards.phenotype in config.get("transform", {}):
+        return f"--transform {config['transform'][wildcards.phenotype]}"
+    return ""
+
+
+def _grm_files(wildcards, grm_type):
+    prefix = f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/grm"
+    grm = [f"{prefix}.{grm_type}.{ext}" for ext in ("bin", "id")]
+    loco = [
+        f"{prefix}.{grm_type}.chr{c}.{ext}"
+        for c in range(1, 13)
+        for ext in ("bin", "id")
+    ]
+    return grm + loco
+
+
+def _assoc_input(wildcards):
+    base = {
+        "phenotype": rules.create_sample_list.output.phenotype,
+        "qcovar": rules.clean_pca_eigenvec.output.covar,
+        "bfile": rules.extract_bed_step2.output.bfile,
+        "grm_add": _grm_files(wildcards, "add"),
+    }
+    if wildcards.model in ("dom", "joint"):
+        base["grm_dom"] = _grm_files(wildcards, "dom")
+    return base
+
+
+def _assoc_flags(wildcards):
+    grm_prefix = f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/grm"
+    if wildcards.model == "add":
+        return f"--grm {grm_prefix}.add"
+    if wildcards.model == "dom":
+        return f"--grm {grm_prefix}.add {grm_prefix}.dom --model d"
+    return f"--grm {grm_prefix}.add {grm_prefix}.dom --test joint"
+
+
+rule gelex_grm:
     input:
         bfile=rules.extract_bed_step1.output.bfile,
     output:
         grm=temp(
-            multiext("results/{run_id}/{group}/{phenotype}/grm", ".add.bin", ".add.id")
+            multiext(
+                "results/{run_id}/{group}/{phenotype}/grm",
+                ".{grm_type}.bin",
+                ".{grm_type}.id",
+            )
         ),
         loco=temp(
             expand(
-                "results/{{run_id}}/{{group}}/{{phenotype}}/grm.add.chr{chr}.{ext}",
+                "results/{{run_id}}/{{group}}/{{phenotype}}/grm.{{grm_type}}.chr{chr}.{ext}",
                 chr=range(1, 13),
                 ext=["bin", "id"],
             )
@@ -24,102 +67,31 @@ rule gelex_grm_add:
         "../envs/gelex.yml"
     params:
         bfile_prefix=rules.extract_bed_step1.params.output_prefix,
-        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/grm.add",
-        output_prefix_loco=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/grm",
+        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/grm",
     shell:
         """
-        gelex grm -b {params.bfile_prefix} --add -o {params.output_prefix} -t {threads}
-        gelex grm -b {params.bfile_prefix} --add -o {params.output_prefix_loco} -t {threads} --loco
+        gelex grm -b {params.bfile_prefix} --{wildcards.grm_type} -o {params.output_prefix} -t {threads}
+        gelex grm -b {params.bfile_prefix} --{wildcards.grm_type} -o {params.output_prefix} -t {threads} --loco
         """
 
 
-rule gelex_grm_dom:
+rule gelex_assoc:
     input:
-        bfile=rules.extract_bed_step1.output.bfile,
+        unpack(_assoc_input),
     output:
-        grm=temp(
-            multiext("results/{run_id}/{group}/{phenotype}/grm", ".dom.bin", ".dom.id")
-        ),
-        loco=temp(
-            expand(
-                "results/{{run_id}}/{{group}}/{{phenotype}}/grm.dom.chr{chr}.{ext}",
-                chr=range(1, 13),
-                ext=["bin", "id"],
-            )
-        ),
-    threads: config["gelex"]["grm_threads"]
-    resources:
-        cpus_per_task=threads,
-    conda:
-        "../envs/gelex.yml"
-    params:
-        bfile_prefix=rules.extract_bed_step1.params.output_prefix,
-        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/grm.dom",
-        output_prefix_loco=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/grm",
-    shell:
-        """
-        gelex grm -b {params.bfile_prefix} --dom -o {params.output_prefix} -t {threads}
-        gelex grm -b {params.bfile_prefix} --dom -o {params.output_prefix_loco} -t {threads} --loco
-        """
-
-
-rule gelex_assoc_add:
-    input:
-        grm_add=rules.gelex_grm_add.output.grm,
-        grm_loco=rules.gelex_grm_add.output.loco,
-        phenotype=rules.create_sample_list.output.phenotype,
-        qcovar=rules.clean_pca_eigenvec.output.covar,
-        bfile=rules.extract_bed_step2.output.bfile,
-    output:
-        assoc="results/{run_id}/{group}/{phenotype}/add_assoc.gwas.tsv",
+        assoc="results/{run_id}/{group}/{phenotype}/{model}_assoc.gwas.tsv",
     threads: config["gelex"]["assoc_threads"]
     resources:
         cpus_per_task=threads,
     conda:
         "../envs/gelex.yml"
     params:
-        bfile_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/common/step2",
-        grm_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/grm",
-        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/add_assoc",
-        transform=lambda wildcards: (
-            f"--transform {config['transform'][wildcards.phenotype]}"
-            if wildcards.phenotype in config.get("transform", {})
-            else ""
-        ),
+        bfile_prefix=rules.extract_bed_step2.params.output_prefix,
+        flags=_assoc_flags,
+        transform=_get_transform,
     shell:
         """
-        gelex assoc -b {params.bfile_prefix} -p {input.phenotype} --grm {params.grm_prefix}.add {params.transform} --qcovar {input.qcovar} -o {params.output_prefix} -t {threads} --loco
-        """
-
-
-rule gelex_assoc_dom:
-    input:
-        grm_add=rules.gelex_grm_add.output.grm,
-        grm_dom=rules.gelex_grm_dom.output.grm,
-        grm_add_loco=rules.gelex_grm_add.output.loco,
-        grm_dom_loco=rules.gelex_grm_dom.output.loco,
-        phenotype=rules.create_sample_list.output.phenotype,
-        qcovar=rules.clean_pca_eigenvec.output.covar,
-        bfile=rules.extract_bed_step2.output.bfile,
-    output:
-        assoc="results/{run_id}/{group}/{phenotype}/dom_assoc.gwas.tsv",
-    threads: config["gelex"]["assoc_threads"]
-    resources:
-        cpus_per_task=threads,
-    conda:
-        "../envs/gelex.yml"
-    params:
-        bfile_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/common/step2",
-        grm_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/grm",
-        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/dom_assoc",
-        transform=lambda wildcards: (
-            f"--transform {config['transform'][wildcards.phenotype]}"
-            if wildcards.phenotype in config.get("transform", {})
-            else ""
-        ),
-    shell:
-        """
-        gelex assoc -b {params.bfile_prefix} -p {input.phenotype} --grm {params.grm_prefix}.add {params.grm_prefix}.dom --model d {params.transform} --qcovar {input.qcovar} -o {params.output_prefix} -t {threads} --loco
+        gelex assoc -b {params.bfile_prefix} -p {input.phenotype} {params.flags} {params.transform} --qcovar {input.qcovar} -o results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/{wildcards.model}_assoc -t {threads} --loco
         """
 
 
