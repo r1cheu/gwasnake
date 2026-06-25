@@ -1,0 +1,12 @@
+[workspace]
+authors = ["r1cheu <chenrulei@cemps.ac.cn>"]
+channels = ["conda-forge", "bioconda"]
+name = "gwasnake"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+conda = ">=26.5.3,<27"
+snakemake = ">=9.23.1,<10"

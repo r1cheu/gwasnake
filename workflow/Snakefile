@@ -4,6 +4,9 @@
 # in particular regarding the standardized folder structure mentioned there.
 
 
+import os
+
+
 # load configuration
 # -----------------------------------------------------
 configfile: "config/config.yaml"
@@ -30,43 +33,58 @@ with open(config["phenotype"], "r") as f:
     if line[0] != "FID" and line[1] != "IID":
         msg = "Make sure FID and IID in the first line of phenotype file. And split by tab."
         raise ValueError(msg)
-PHENOTYPE = [p for p, m in config["phenotype_setting"].items() if m != "joint"]
-DOM_PHENOTYPE = [p for p, m in config["phenotype_setting"].items() if m == "dom"]
-JOINT_PHENOTYPE = [p for p, m in config["phenotype_setting"].items() if m == "joint"]
+
+PHENOTYPES = config["phenotypes"]
+
+
+def normalize_chr(value):
+    value = value.strip()
+    if value.lower().startswith("chr"):
+        value = value[3:]
+    return value.lstrip("0") or "0"
+
+
+# Parse one fine-mapping BED per phenotype (cols: chr start end [name]).
+# Phenotypes without a BED file are skipped (no fine-mapping targets).
+REGIONS = dict()
+REGION_INFO = dict()
+for pheno in PHENOTYPES:
+    bed_path = config["regions"].format(phenotype=pheno)
+    if not os.path.exists(bed_path):
+        continue
+    names = []
+    with open(bed_path, "r") as f:
+        for raw in f:
+            raw = raw.strip()
+            if not raw or raw.startswith("#"):
+                continue
+            fields = raw.split()
+            chrom = normalize_chr(fields[0])
+            start, end = fields[1], fields[2]
+            name = fields[3] if len(fields) > 3 else f"{chrom}_{start}_{end}"
+            names.append(name)
+            REGION_INFO[(pheno, name)] = (chrom, start, end)
+    REGIONS[pheno] = names
 
 
 include: "rules/prepare.smk"
-include: "rules/gelex.smk"
+include: "rules/finemap.smk"
 
 
 onstart:
     print(f"{len(GROUP)} groups found in {config['halfsib']}")
-    print(f"ADD Phenotype: {PHENOTYPE}")
-    print(f"DOM Phenotype: {DOM_PHENOTYPE}")
-    print(f"JOINT Phenotype: {JOINT_PHENOTYPE}")
+    print(f"Phenotypes with regions: {sorted(REGIONS)}")
+    print(f"Total regions: {sum(len(v) for v in REGIONS.values())}")
 
 
 # target rules
 # -----------------------------------------------------
 rule all:
     input:
-        expand(
-            "results/{run_id}/{group}/{phenotype}/add_manhattan.png",
-            phenotype=PHENOTYPE,
-            run_id=config["run_id"],
-            group=GROUP,
-        ),
-        expand(
-            "results/{run_id}/{group}/{phenotype}/dom_manhattan.png",
-            phenotype=DOM_PHENOTYPE,
-            run_id=config["run_id"],
-            group=GROUP,
-        ),
-        expand(
-            "results/{run_id}/{group}/{phenotype}/joint_manhattan_{suffix}.png",
-            phenotype=JOINT_PHENOTYPE,
-            run_id=config["run_id"],
-            group=GROUP,
-            suffix=["A", "D"],
-        ),
+        [
+            f"results/{config['run_id']}/{group}/{pheno}/finemap/{region}/pip.tsv"
+            for group in GROUP
+            for pheno in REGIONS
+            for region in REGIONS[pheno]
+        ],
     default_target: True

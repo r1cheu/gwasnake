@@ -73,7 +73,7 @@ rule pca:
         eval=temp("results/{run_id}/{group}/{phenotype}/common/pca.eigenval"),
     conda:
         "../envs/plink2.yml"
-    threads: 1
+    threads: 8
     resources:
         cpu_per_task=threads,
     params:
