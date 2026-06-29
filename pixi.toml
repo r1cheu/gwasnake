@@ -1,0 +1,23 @@
+[workspace]
+authors = ["r1cheu <chenrulei@cemps.ac.cn>"]
+channels = [
+    "conda-forge",
+    "bioconda",
+    "http://git.lab/api/packages/rlchen/conda",
+]
+name = "gwasnake"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+conda = ">=26.5.3,<27"
+snakemake = ">=9.23.1,<10"
+python = "*"
+numpy = "*"
+pandas = "*"
+gelex-python = "*"
+
+[pypi-dependencies]
+bed-reader = ">=1.1.0, <2"

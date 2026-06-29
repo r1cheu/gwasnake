@@ -27,7 +27,7 @@ rule extract_bed_step1:
             )
         ),
     conda:
-        "../envs/plink.yml"
+        "../envs/plink2.yml"
     log:
         "logs/{run_id}/{group}/{phenotype}/step1_plink.log",
     params:
@@ -35,7 +35,7 @@ rule extract_bed_step1:
         output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/common/step1",
     shell:
         """
-        plink --bfile {params.step1} --keep {input.sample_list} --maf 0.01 --geno 0.1 --out {params.output_prefix} --make-bed --threads 1 &> {log}
+        plink2 --bfile {params.step1} --keep {input.sample_list} --maf 0.01 --geno 0.1 --out {params.output_prefix} --make-bed --threads 1 &> {log}
         """
 
 
@@ -52,7 +52,7 @@ rule extract_bed_step2:
             )
         ),
     conda:
-        "../envs/plink.yml"
+        "../envs/plink2.yml"
     log:
         "logs/{run_id}/{group}/{phenotype}/step2_plink.log",
     params:
@@ -60,7 +60,7 @@ rule extract_bed_step2:
         output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/common/step2",
     shell:
         """
-        plink --bfile {params.step2} --keep {input.sample_list} --maf 0.001 --out {params.output_prefix} --make-bed --threads 1 &> {log}
+        plink2 --bfile {params.step2} --keep {input.sample_list} --maf 0.001 --out {params.output_prefix} --make-bed --threads 1 &> {log}
         """
 
 
@@ -73,7 +73,7 @@ rule pca:
         eval=temp("results/{run_id}/{group}/{phenotype}/common/pca.eigenval"),
     conda:
         "../envs/plink2.yml"
-    threads: 1
+    threads: config["plink2"]["pca_threads"]
     resources:
         cpu_per_task=threads,
     params:

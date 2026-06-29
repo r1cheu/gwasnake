@@ -30,9 +30,7 @@ with open(config["phenotype"], "r") as f:
     if line[0] != "FID" and line[1] != "IID":
         msg = "Make sure FID and IID in the first line of phenotype file. And split by tab."
         raise ValueError(msg)
-PHENOTYPE = [p for p, m in config["phenotype_setting"].items() if m != "joint"]
-DOM_PHENOTYPE = [p for p, m in config["phenotype_setting"].items() if m == "dom"]
-JOINT_PHENOTYPE = [p for p, m in config["phenotype_setting"].items() if m == "joint"]
+PHENOTYPE = config["phenotypes"]
 
 
 include: "rules/prepare.smk"
@@ -41,9 +39,7 @@ include: "rules/gelex.smk"
 
 onstart:
     print(f"{len(GROUP)} groups found in {config['halfsib']}")
-    print(f"ADD Phenotype: {PHENOTYPE}")
-    print(f"DOM Phenotype: {DOM_PHENOTYPE}")
-    print(f"JOINT Phenotype: {JOINT_PHENOTYPE}")
+    print(f"Phenotypes: {PHENOTYPE}")
 
 
 # target rules
@@ -51,22 +47,10 @@ onstart:
 rule all:
     input:
         expand(
-            "results/{run_id}/{group}/{phenotype}/add_manhattan.png",
+            "results/{run_id}/{group}/{phenotype}/joint_manhattan_{suffix}.png",
             phenotype=PHENOTYPE,
             run_id=config["run_id"],
             group=GROUP,
-        ),
-        expand(
-            "results/{run_id}/{group}/{phenotype}/dom_manhattan.png",
-            phenotype=DOM_PHENOTYPE,
-            run_id=config["run_id"],
-            group=GROUP,
-        ),
-        expand(
-            "results/{run_id}/{group}/{phenotype}/joint_manhattan_{suffix}.png",
-            phenotype=JOINT_PHENOTYPE,
-            run_id=config["run_id"],
-            group=GROUP,
-            suffix=["A", "D"],
+            suffix=["A", "D", "AD"],
         ),
     default_target: True

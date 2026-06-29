@@ -1,67 +1,44 @@
-run_id: "SH_1112"
+run_id: "Test"
 halfsib: "config/empty.csv"
-phenotype: "phenotype/sh_f1_latest.phen"
-phenotype_setting:
-  PlantHeight: "dom"
-  StemLength: "dom"
-  PanicleNeckLength: "dom"
-  FlagLeafLength: "dom"
-  FlagLeafWidth: "add"
-  PanicleNumber: "add"
-  StemDiameterLength: "dom"
-  StemDiameterWidth: "add"
-  StrawWeight: "dom"
-  GrainToStrawRatio: "dom"
-  YieldPerPlant: "dom"
-  KiloGrainWeight: "dom"
-  SeedSettingRate: "dom"
-  TotalGrainNumberPerPanicle: "dom"
-  FullGrainNumberPerPanicle: "dom"
-  TotalGrainNumber: "dom"
-  EmptyGrainNumber: "dom"
-  FullGrainNumber: "dom"
-  GrainShape: "add"
-  GrainLength: "add"
-  GrainWidth: "add"
-  GrainArea: "add"
-  Perimeter: "add"
-  Roundness: "add"
+phenotype: "phenotype/sh_f1_restorer_new_replaced.phen"
+
+phenotypes:
+  - PlantHeight
+  - StemLength
+  - PanicleNeckLength
+  - FlagLeafLength
+  - FlagLeafWidth
+  - PanicleNumber
+  - StemDiameterLength
+  - StemDiameterWidth
+  - StrawWeight
+  - GrainToStrawRatio
+  - YieldPerPlant
+  - KiloGrainWeight
+  - SeedSettingRate
+  - TotalGrainNumberPerPanicle
+  - FullGrainNumberPerPanicle
+  - TotalGrainNumber
+  - EmptyGrainNumber
+  - FullGrainNumber
+  - GrainShape
+  - GrainLength
+  - GrainWidth
+  - GrainArea
+  - Perimeter
+  - Roundness
 
 bfile:
-  step1: "bfile/f1_1570_imputed_lowcoverageflt_fltdup_LDfilter"
-  step2: "bfile/f1_1570_imputed_lowcoverageflt_fltdup"
+  step1: "bfile/6983_train_xiansub_LDfilter"
+  step2: "bfile/6983_train_xiansub"
 
 pca: 5
 
-plink:
-  threads: 1
+plink2:
+  pca_threads: 1
 
-# per-phenotype transform (phenotypes not listed = no transform)
-transform:
-  PlantHeight: "iint"
-  StemLength: "iint"
-  PanicleNeckLength: "iint"
-  FlagLeafLength: "iint"
-  FlagLeafWidth: "iint"
-  PanicleNumber: "iint"
-  StemDiameterLength: "iint"
-  StemDiameterWidth: "iint"
-  StrawWeight: "iint"
-  GrainToStrawRatio: "iint"
-  YieldPerPlant: "iint"
-  KiloGrainWeight: "ii"
-  SeedSettingRate: "iint"
-  TotalGrainNumberPerPanicle: "iint"
-  FullGrainNumberPerPanicle: "iint"
-  TotalGrainNumber: "iint"
-  EmptyGrainNumber: "iint"
-  FullGrainNumber: "iint"
-  GrainShape: "iint"
-  GrainLength: "iint"
-  GrainWidth: "iint"
-  GrainArea: "iint"
-  Perimeter: "iint"
-  Roundness: "iint"
+# global transform applied to every phenotype: iint | dint | none
+transform: "iint"
 
 gelex:
   grm_threads: 1

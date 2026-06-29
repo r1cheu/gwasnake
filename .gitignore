@@ -14,3 +14,6 @@ workflow/notebooks/.ipynb_checkpoints/**
 **/phenotype/**
 workflow/scripts/__pycache__
 CLAUDE.md
+# pixi environments
+.pixi/*
+!.pixi/config.toml

@@ -5,13 +5,10 @@ from plot_utils import manhattan_plot
 data = pd.read_csv(snakemake.input.summary, sep="\t")
 group = snakemake.wildcards.group
 phenotype = snakemake.wildcards.phenotype
-mode = snakemake.params.mode
 
-if mode == "joint":
-    plots = [("P_A", "joint-A", snakemake.output.png_a),
-             ("P_D", "joint-D", snakemake.output.png_d)]
-else:
-    plots = [("P", mode, snakemake.output.png)]
+plots = [("P_A", "joint-A", snakemake.output.png_a),
+         ("P_D", "joint-D", snakemake.output.png_d),
+         ("P_AD", "joint-AD", snakemake.output.png_ad)]
 
 for p_col, label, out in plots:
     manhattan_plot(
