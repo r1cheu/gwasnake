@@ -39,20 +39,4 @@ for _, q in qtl.iterrows():
         }
     )
 
-pd.DataFrame(
-    rows,
-    columns=[
-        "CHR",
-        "SNP",
-        "BP",
-        "A1",
-        "A2",
-        "A",
-        "A_SE",
-        "D",
-        "D_SE",
-        "PVE_A",
-        "PVE_D",
-        "PVE_AD",
-    ],
-).to_csv(snakemake.output.table, sep="\t", index=False)
+pd.DataFrame(rows).to_csv(snakemake.output.table, sep="\t", index=False)

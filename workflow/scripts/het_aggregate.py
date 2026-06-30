@@ -8,7 +8,7 @@ ALPHA = 0.05
 
 diag = pd.read_csv(snakemake.input.diagnostic, sep="\t").set_index("locus")
 
-rows = []
+conclusive = {}
 for full_summary, null_summary, locus in zip(
     snakemake.input.full_summaries,
     snakemake.input.null_summaries,
@@ -24,39 +24,31 @@ for full_summary, null_summary, locus in zip(
     # boundary test: 0.5*chi2_0 + 0.5*chi2_1, so p = 0.5 * P(chi2_1 >= lrt)
     p_lrt = 0.5 * math.erfc(math.sqrt(lrt / 2.0)) if lrt > 0 else 1.0
 
-    rows.append(
-        {
-            "locus": locus,
-            "n_informative": int(diag.loc[locus, "n_informative"]),
-            "sigma2_sd": sd["estimate"],
-            "se_sd": sd["se"],
-            "ratio_sd": sd["ratio"],
-            "logL_full": logl_full,
-            "logL_null": logl_null,
-            "LRT": lrt,
-            "p_lrt": p_lrt,
-            "classification": "background_dependent" if p_lrt < ALPHA else "stable",
-        }
-    )
+    conclusive[locus] = {
+        "sigma2_sd": sd["estimate"],
+        "se_sd": sd["se"],
+        "ratio_sd": sd["ratio"],
+        "logL_full": logl_full,
+        "logL_null": logl_null,
+        "LRT": lrt,
+        "p_lrt": p_lrt,
+        "classification": "background_dependent" if p_lrt < ALPHA else "stable",
+    }
 
-done = {r["locus"] for r in rows}
-for locus, d in diag.iterrows():
-    if locus in done:
-        continue
-    rows.append(
-        {
-            "locus": locus,
-            "n_informative": int(d["n_informative"]),
-            "sigma2_sd": np.nan,
-            "se_sd": np.nan,
-            "ratio_sd": np.nan,
-            "logL_full": np.nan,
-            "logL_null": np.nan,
-            "LRT": np.nan,
-            "p_lrt": np.nan,
-            "classification": "inconclusive",
-        }
-    )
+inconclusive = {
+    "sigma2_sd": np.nan,
+    "se_sd": np.nan,
+    "ratio_sd": np.nan,
+    "logL_full": np.nan,
+    "logL_null": np.nan,
+    "LRT": np.nan,
+    "p_lrt": np.nan,
+    "classification": "inconclusive",
+}
 
-table = pd.DataFrame(rows).set_index("locus").loc[diag.index].reset_index()
-table.to_csv(snakemake.output.table, sep="\t", index=False)
+rows = [
+    {"locus": locus, "n_informative": int(d["n_informative"]),
+     **conclusive.get(locus, inconclusive)}
+    for locus, d in diag.iterrows()
+]
+pd.DataFrame(rows).to_csv(snakemake.output.table, sep="\t", index=False)

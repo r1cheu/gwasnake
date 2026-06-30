@@ -4,6 +4,7 @@ import gelex
 import numpy as np
 import pandas as pd
 from bed_reader import open_bed
+from bed_utils import align_to_bed
 
 het_min = snakemake.params.het_min
 hom_min = snakemake.params.hom_min
@@ -15,9 +16,8 @@ family = pd.read_csv(
 ).set_index("IID")
 
 bed = open_bed(snakemake.params.bfile + ".bed")
-row_for_iid = {iid: i for i, iid in enumerate(bed.iid)}
-common = [iid for iid in bed.iid if iid in family.index]
-row_idx = [row_for_iid[iid] for iid in common]
+sid_pos = {s: i for i, s in enumerate(bed.sid)}
+common, row_idx = align_to_bed(bed, set(family.index))
 fid = family.loc[common, "FID"].to_numpy()
 fam_label = pd.Series(family.loc[common, "family"].to_numpy())
 
@@ -26,15 +26,14 @@ loci_dir.mkdir(parents=True, exist_ok=True)
 
 diag_rows = []
 for snp_id in loci:
-    sid_idx = np.where(bed.sid == snp_id)[0]
-    if len(sid_idx) == 0:
+    if snp_id not in sid_pos:
         diag_rows.append(
             {"locus": snp_id, "n_families": 0, "n_informative": 0,
              "n_het_total": 0, "status": "inconclusive"}
         )
         continue
 
-    genotype = bed.read(index=np.s_[row_idx, sid_idx], dtype="float64")
+    genotype = bed.read(index=np.s_[row_idx, [sid_pos[snp_id]]], dtype="float64")
     g = genotype[:, 0]
     counts = pd.DataFrame(
         {"family": fam_label, "het": g == 1, "hom": (g == 0) | (g == 2)}
