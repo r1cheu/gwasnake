@@ -3,7 +3,6 @@ from plot_utils import manhattan_plot
 
 
 data = pd.read_csv(snakemake.input.summary, sep="\t")
-group = snakemake.wildcards.group
 phenotype = snakemake.wildcards.phenotype
 
 plots = [("P_A", "joint-A", snakemake.output.png_a),
@@ -18,7 +17,7 @@ for p_col, label, out in plots:
         p_col=p_col,
         threshold=6,
         log=True,
-        title=f"{group}-{phenotype} ({label})",
+        title=f"{phenotype} ({label})",
         output_file=out,
         figsize=(18, 6),
     )

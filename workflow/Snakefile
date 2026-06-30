@@ -9,21 +9,6 @@
 configfile: "config/config.yaml"
 
 
-try:
-    HALFSIB = dict()
-    GROUP = []
-    with open(config["halfsib"], "r") as f:
-        for idx, line in enumerate(f, start=1):
-            group = line.strip().split(",")
-            group_name = f"branch{idx:02d}"
-            GROUP.append(group_name)
-            HALFSIB[group_name] = group
-
-except FileNotFoundError:
-    msg = f"{config["halfsib"]} not found. Please ensure it exists and is correctly formatted."
-    raise FileNotFoundError(msg)
-
-
 with open(config["phenotype"], "r") as f:
     line = f.readline()
     line = line.strip().split("\t")
@@ -33,24 +18,72 @@ with open(config["phenotype"], "r") as f:
 PHENOTYPE = config["phenotypes"]
 
 
+import pandas as pd
+
+_qtl = pd.read_csv(config["qtl_list"], sep="\t")
+# phenotypes that actually have QTL -> their locus (SNP) list
+QTL_LOCI = {
+    p: _qtl.loc[_qtl["PHENOTYPE"] == p, "SNP"].tolist()
+    for p in PHENOTYPE
+    if (_qtl["PHENOTYPE"] == p).any()
+}
+QTL_PHENOTYPE = list(QTL_LOCI)
+
+
 include: "rules/prepare.smk"
-include: "rules/gelex.smk"
+include: "rules/gwas.smk"
+include: "rules/qtl.smk"
+include: "rules/conditional.smk"
+include: "rules/heterogeneity.smk"
 
 
 onstart:
-    print(f"{len(GROUP)} groups found in {config['halfsib']}")
     print(f"Phenotypes: {PHENOTYPE}")
+    print(f"QTL phenotypes: {QTL_PHENOTYPE}")
+    print(f"Analyses: {config['analyses']}")
 
 
 # target rules
 # -----------------------------------------------------
+def analysis_targets(analysis):
+    if analysis == "gwas":
+        return expand(
+            "results/{run_id}/{phenotype}/joint_manhattan_{suffix}.png",
+            run_id=config["run_id"],
+            phenotype=PHENOTYPE,
+            suffix=["A", "D", "AD"],
+        )
+    if analysis == "conditional":
+        return expand(
+            "results/{run_id}/{phenotype}/conditional/qtl_effects.tsv",
+            run_id=config["run_id"],
+            phenotype=QTL_PHENOTYPE,
+        )
+    if analysis == "heterogeneity":
+        return expand(
+            "results/{run_id}/{phenotype}/heterogeneity/heterogeneity.tsv",
+            run_id=config["run_id"],
+            phenotype=QTL_PHENOTYPE,
+        )
+    raise ValueError(f"Unknown analysis: {analysis}")
+
+
+rule gwas:
+    input:
+        analysis_targets("gwas"),
+
+
+rule conditional:
+    input:
+        analysis_targets("conditional"),
+
+
+rule heterogeneity:
+    input:
+        analysis_targets("heterogeneity"),
+
+
 rule all:
     input:
-        expand(
-            "results/{run_id}/{group}/{phenotype}/joint_manhattan_{suffix}.png",
-            phenotype=PHENOTYPE,
-            run_id=config["run_id"],
-            group=GROUP,
-            suffix=["A", "D", "AD"],
-        ),
+        [t for analysis in config["analyses"] for t in analysis_targets(analysis)],
     default_target: True

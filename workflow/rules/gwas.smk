@@ -8,7 +8,7 @@ rule gelex_grm:
     output:
         grm=temp(
             multiext(
-                "results/{run_id}/{group}/{phenotype}/grm",
+                "results/{run_id}/{phenotype}/grm",
                 ".add.bin",
                 ".add.id",
                 ".dom.bin",
@@ -17,7 +17,7 @@ rule gelex_grm:
         ),
         loco=temp(
             expand(
-                "results/{{run_id}}/{{group}}/{{phenotype}}/grm.{grm_type}.chr{chr}.{ext}",
+                "results/{{run_id}}/{{phenotype}}/grm.{grm_type}.chr{chr}.{ext}",
                 grm_type=["add", "dom"],
                 chr=range(1, 13),
                 ext=["bin", "id"],
@@ -26,15 +26,13 @@ rule gelex_grm:
     threads: config["gelex"]["grm_threads"]
     resources:
         cpus_per_task=threads,
-    conda:
-        "../envs/gelex.yml"
     params:
         bfile_prefix=rules.extract_bed_step1.params.output_prefix,
-        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/grm",
+        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.phenotype}/grm",
     shell:
         """
-        gelex grm -b {params.bfile_prefix} --add --dom -o {params.output_prefix} -t {threads}
-        gelex grm -b {params.bfile_prefix} --add --dom -o {params.output_prefix} -t {threads} --loco
+        gelex grm -b {params.bfile_prefix} --add --dom -o {params.output_prefix} -t {threads} --gm NS
+        gelex grm -b {params.bfile_prefix} --add --dom -o {params.output_prefix} -t {threads} --loco --gm NS
         """
 
 
@@ -45,29 +43,27 @@ rule gelex_assoc:
         bfile=rules.extract_bed_step2.output.bfile,
         grm=rules.gelex_grm.output,
     output:
-        assoc="results/{run_id}/{group}/{phenotype}/joint_assoc.gwas.tsv",
+        assoc="results/{run_id}/{phenotype}/joint_assoc.gwas.tsv",
     threads: config["gelex"]["assoc_threads"]
     resources:
         cpus_per_task=threads,
-    conda:
-        "../envs/gelex.yml"
     params:
         bfile_prefix=rules.extract_bed_step2.params.output_prefix,
-        grm_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/grm",
+        grm_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.phenotype}/grm",
         transform=f"--transform {config['transform']}" if config.get("transform", "none") != "none" else "",
     shell:
         """
-        gelex assoc -b {params.bfile_prefix} -p {input.phenotype} --grm {params.grm_prefix}.add {params.grm_prefix}.dom --test joint {params.transform} --qcovar {input.qcovar} -o results/{wildcards.run_id}/{wildcards.group}/{wildcards.phenotype}/joint_assoc -t {threads} --loco
+        gelex assoc -b {params.bfile_prefix} -p {input.phenotype} --grm {params.grm_prefix}.add {params.grm_prefix}.dom --test joint {params.transform} --qcovar {input.qcovar} --gm NC -o results/{wildcards.run_id}/{wildcards.phenotype}/joint_assoc -t {threads} --loco
         """
 
 
 rule plot_gelex_joint:
     input:
-        summary="results/{run_id}/{group}/{phenotype}/joint_assoc.gwas.tsv",
+        summary="results/{run_id}/{phenotype}/joint_assoc.gwas.tsv",
     output:
-        png_a="results/{run_id}/{group}/{phenotype}/joint_manhattan_A.png",
-        png_d="results/{run_id}/{group}/{phenotype}/joint_manhattan_D.png",
-        png_ad="results/{run_id}/{group}/{phenotype}/joint_manhattan_AD.png",
+        png_a="results/{run_id}/{phenotype}/joint_manhattan_A.png",
+        png_d="results/{run_id}/{phenotype}/joint_manhattan_D.png",
+        png_ad="results/{run_id}/{phenotype}/joint_manhattan_AD.png",
     conda:
         "../envs/base.yml"
     script:

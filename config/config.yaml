@@ -1,36 +1,36 @@
-run_id: "Test"
-halfsib: "config/empty.csv"
-phenotype: "phenotype/sh_f1_restorer_new_replaced.phen"
+run_id: "6983_peak"
+phenotype: "phenotype/sh_f1_new_replaced.phen"
+
+# which analyses rule all builds: any of gwas, conditional, heterogeneity
+analyses:
+  - conditional
+  - heterogeneity
 
 phenotypes:
-  - PlantHeight
-  - StemLength
   - PanicleNeckLength
   - FlagLeafLength
   - FlagLeafWidth
   - PanicleNumber
-  - StemDiameterLength
-  - StemDiameterWidth
   - StrawWeight
   - GrainToStrawRatio
   - YieldPerPlant
-  - KiloGrainWeight
   - SeedSettingRate
   - TotalGrainNumberPerPanicle
   - FullGrainNumberPerPanicle
   - TotalGrainNumber
-  - EmptyGrainNumber
   - FullGrainNumber
-  - GrainShape
-  - GrainLength
-  - GrainWidth
-  - GrainArea
-  - Perimeter
-  - Roundness
+  - HeadingDate
 
 bfile:
   step1: "bfile/6983_train_xiansub_LDfilter"
   step2: "bfile/6983_train_xiansub"
+
+qtl_list: "config/qtl_list.tsv"
+
+# two-step --indep-pairwise applied in order on the QTL-region-removed background
+ld_prune:
+  - "10kb 1 0.8"
+  - "50 1 0.8"
 
 pca: 5
 
@@ -40,6 +40,16 @@ plink2:
 # global transform applied to every phenotype: iint | dint | none
 transform: "iint"
 
+heterogeneity:
+  family_file: "config/6983_family.tsv"
+  # GATE: a family informs a locus's dominance slope only if it has both
+  # het_min heterozygotes and hom_min homozygotes; loci with fewer than
+  # min_families informative families are skipped (inconclusive).
+  het_min: 3
+  hom_min: 1
+  min_families: 10
+
 gelex:
   grm_threads: 1
   assoc_threads: 1
+  reml_threads: 1
