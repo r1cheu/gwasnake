@@ -1,5 +1,13 @@
 {
   "userWords": [
-    "SHID"
+    "SHID",
+    "bfile",
+    "covar",
+    "gelex"
+  ],
+  "words": [
+    "qcovar",
+    "reml",
+    "cpus"
   ]
 }

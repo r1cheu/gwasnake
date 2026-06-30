@@ -50,7 +50,7 @@ rule gelex_assoc:
     params:
         bfile_prefix=rules.extract_bed_step2.params.output_prefix,
         grm_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.phenotype}/grm",
-        transform=f"--transform {config['transform']}" if config.get("transform", "none") != "none" else "",
+        transform=f"--transform {config['transform']['gwas']}" if config["transform"]["gwas"] != "none" else "",
     shell:
         """
         gelex assoc -b {params.bfile_prefix} -p {input.phenotype} --grm {params.grm_prefix}.add {params.grm_prefix}.dom --test joint {params.transform} --qcovar {input.qcovar} --gm NC -o results/{wildcards.run_id}/{wildcards.phenotype}/joint_assoc -t {threads} --loco

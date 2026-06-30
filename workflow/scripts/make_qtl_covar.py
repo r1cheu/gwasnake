@@ -19,10 +19,10 @@ genotype = bed.read(index=np.s_[row_idx, sid_idx], dtype="float64")
 additive = np.copy(genotype, order="F")
 dominant = np.copy(genotype, order="F")
 gelex.encode_inplace(
-    additive, effect=gelex.GeneticMode.A, method=gelex.GenotypeMethod.NOIACenter
+    additive, effect=gelex.GeneticMode.A, method=gelex.GenotypeMethod.Center
 )
 gelex.encode_inplace(
-    dominant, effect=gelex.GeneticMode.D, method=gelex.GenotypeMethod.NOIACenter
+    dominant, effect=gelex.GeneticMode.D, method=gelex.GenotypeMethod.Center
 )
 
 qcovar = pd.DataFrame({"FID": samples["FID"].to_numpy(), "IID": iids})

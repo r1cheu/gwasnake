@@ -48,7 +48,7 @@ rule reml_het_null:
     params:
         grm_prefix=rules.background_grm.params.prefix,
         out_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.phenotype}/heterogeneity/loci/{wildcards.locus}/reml.null",
-        transform=f"--transform {config['transform']}" if config.get("transform", "none") != "none" else "",
+        transform=f"--transform {config['transform']['heterogeneity']}" if config["transform"]["heterogeneity"] != "none" else "",
     shell:
         """
         gelex reml -p {input.phenotype} --grm {params.grm_prefix}.add {params.grm_prefix}.dom --qcovar {input.qcovar} --qrand {input.za} {params.transform} -o {params.out_prefix} -t {threads}
@@ -72,7 +72,7 @@ rule reml_het_full:
     params:
         grm_prefix=rules.background_grm.params.prefix,
         out_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.phenotype}/heterogeneity/loci/{wildcards.locus}/reml.full",
-        transform=f"--transform {config['transform']}" if config.get("transform", "none") != "none" else "",
+        transform=f"--transform {config['transform']['heterogeneity']}" if config["transform"]["heterogeneity"] != "none" else "",
     shell:
         """
         gelex reml -p {input.phenotype} --grm {params.grm_prefix}.add {params.grm_prefix}.dom --qcovar {input.qcovar} --qrand {input.za} {input.zd} {params.transform} -o {params.out_prefix} -t {threads}

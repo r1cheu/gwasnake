@@ -38,13 +38,13 @@ plink2:
   pca_threads: 1
 
 # global transform applied to every phenotype: iint | dint | none
-transform: "iint"
+transform:
+  gwas: iint
+  conditional: dint
+  heterogeneity: dint
 
 heterogeneity:
   family_file: "config/6983_family.tsv"
-  # GATE: a family informs a locus's dominance slope only if it has both
-  # het_min heterozygotes and hom_min homozygotes; loci with fewer than
-  # min_families informative families are skipped (inconclusive).
   het_min: 3
   hom_min: 1
   min_families: 10

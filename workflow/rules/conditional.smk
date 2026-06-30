@@ -1,6 +1,5 @@
 # Task A: QTL as fixed effects, conditional on background + each other.
 
-
 rule make_qtl_covar:
     input:
         qtl=rules.qtl_subset.output.qtl,
@@ -28,9 +27,10 @@ rule reml_conditional:
     params:
         grm_prefix=rules.background_grm.params.prefix,
         out_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.phenotype}/conditional/reml",
+        transform=f"--transform {config['transform']['conditional']}" if config["transform"]["conditional"] != "none" else "",
     shell:
         """
-        gelex reml -p {input.phenotype} --grm {params.grm_prefix}.add {params.grm_prefix}.dom --qcovar {input.qcovar} -o {params.out_prefix} -t {threads}
+        gelex reml -p {input.phenotype} --grm {params.grm_prefix}.add {params.grm_prefix}.dom --qcovar {input.qcovar} {params.transform} -o {params.out_prefix} -t {threads}
         """
 
 
