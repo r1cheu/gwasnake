@@ -3,11 +3,14 @@
 
 
 rule qtl_subset:
+    input:
+        bfile=rules.extract_bed_step2.output.bfile,
     output:
         qtl="results/{run_id}/{phenotype}/qtl/qtl.tsv",
         regions="results/{run_id}/{phenotype}/qtl/regions.txt",
-    conda:
-        "../envs/base.yml"
+        dropped="results/{run_id}/{phenotype}/qtl/dropped.tsv",
+    params:
+        bfile=rules.extract_bed_step2.params.output_prefix,
     script:
         "../scripts/qtl_subset.py"
 

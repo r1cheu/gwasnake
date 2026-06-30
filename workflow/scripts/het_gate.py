@@ -8,7 +8,7 @@ from bed_reader import open_bed
 het_min = snakemake.params.het_min
 hom_min = snakemake.params.hom_min
 min_families = snakemake.params.min_families
-loci = snakemake.params.loci
+loci = pd.read_csv(snakemake.input.qtl, sep="\t")["SNP"].tolist()
 
 family = pd.read_csv(
     snakemake.config["heterogeneity"]["family_file"], sep="\t"

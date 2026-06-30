@@ -11,12 +11,12 @@ wildcard_constraints:
 checkpoint het_gate:
     input:
         bfile=rules.extract_bed_step2.output.bfile,
+        qtl=rules.qtl_subset.output.qtl,
     output:
         diagnostic="results/{run_id}/{phenotype}/heterogeneity/het_diagnostic.tsv",
         loci_dir=directory("results/{run_id}/{phenotype}/heterogeneity/loci"),
     params:
         bfile=rules.extract_bed_step2.params.output_prefix,
-        loci=lambda wildcards: QTL_LOCI[wildcards.phenotype],
         het_min=config["heterogeneity"]["het_min"],
         hom_min=config["heterogeneity"]["hom_min"],
         min_families=config["heterogeneity"]["min_families"],
