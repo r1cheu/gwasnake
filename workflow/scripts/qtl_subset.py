@@ -28,8 +28,3 @@ for k, idx in enumerate(qtl.index[col_idx.notna()]):
 
 keep = n_classes == 3
 qtl[keep].to_csv(snakemake.output.qtl, sep="\t", index=False)
-
-dropped = qtl.loc[~keep, ["CHR", "SNP", "BP"]].copy()
-dropped["n_classes"] = n_classes[~keep].to_numpy()
-dropped["reason"] = "genotype_class_lt_3"
-dropped.to_csv(snakemake.output.dropped, sep="\t", index=False)

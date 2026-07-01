@@ -8,7 +8,6 @@ rule qtl_subset:
     output:
         qtl="results/{run_id}/{phenotype}/qtl/qtl.tsv",
         regions="results/{run_id}/{phenotype}/qtl/regions.txt",
-        dropped="results/{run_id}/{phenotype}/qtl/dropped.tsv",
     params:
         bfile=rules.extract_bed_step2.params.output_prefix,
     script:

@@ -44,10 +44,13 @@ transform:
   heterogeneity: dint
 
 heterogeneity:
-  family_file: "config/6983_family.tsv"
-  het_min: 3
-  hom_min: 1
-  min_families: 10
+  # genetic-background strata from k-means on the background PCs (config.pca)
+  n_strata: 10
+  het_min: 5
+  # minimum per stratum for EACH homozygote class (AA and aa counted separately)
+  hom_min: 2
+  # a locus is tested only if at least this many strata are three-class
+  min_strata: 6
 
 gelex:
   grm_threads: 1

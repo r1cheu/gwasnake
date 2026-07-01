@@ -1,7 +1,12 @@
-# Task B: is each QTL's dominance effect stable across families?
-# Family-specific slopes are passed as --qrand (gelex forms Za Za' / Zd Zd' kernels).
-# A GATE (checkpoint) keeps only families informative for the dominance slope and
-# skips underpowered loci; the LRT on sigma2_sd (full vs null) tests stability.
+# Task B: is each QTL's dominance effect stable across genetic-background strata?
+# Strata come from k-means on background PCs; being ~orthogonal to the focal
+# genotype, each stratum carries all three genotype classes, so within-stratum
+# additive and dominance slopes are separable (half-sib families cannot do this).
+# Stratum-specific slopes are passed as --qrand (gelex forms Za Za' / Zd Zd'
+# kernels). A GATE (checkpoint) keeps only three-class strata and skips loci with
+# too few; the LRT on sigma2_sd (full vs null) tests stability.
+
+from pathlib import Path
 
 
 wildcard_constraints:
@@ -12,14 +17,15 @@ checkpoint het_gate:
     input:
         bfile=rules.extract_bed_step2.output.bfile,
         qtl=rules.qtl_subset.output.qtl,
+        pca=rules.pca.output.pca,
     output:
-        diagnostic="results/{run_id}/{phenotype}/heterogeneity/het_diagnostic.tsv",
         loci_dir=directory("results/{run_id}/{phenotype}/heterogeneity/loci"),
     params:
         bfile=rules.extract_bed_step2.params.output_prefix,
+        n_strata=config["heterogeneity"]["n_strata"],
         het_min=config["heterogeneity"]["het_min"],
         hom_min=config["heterogeneity"]["hom_min"],
-        min_families=config["heterogeneity"]["min_families"],
+        min_strata=config["heterogeneity"]["min_strata"],
     script:
         "../scripts/het_gate.py"
 
@@ -32,7 +38,7 @@ def _locus_file(name):
     return inner
 
 
-# Null model: additive family slope only (za as nuisance), no dominance slope.
+# Null model: additive stratum slope only (za as nuisance), no dominance slope.
 rule reml_het_null:
     input:
         phenotype=rules.create_sample_list.output.phenotype,
@@ -55,7 +61,7 @@ rule reml_het_null:
         """
 
 
-# Full model: additive + dominance family slopes. LRT vs null tests sigma2_sd = 0.
+# Full model: additive + dominance stratum slopes. LRT vs null tests sigma2_sd = 0.
 rule reml_het_full:
     input:
         phenotype=rules.create_sample_list.output.phenotype,
@@ -81,8 +87,7 @@ rule reml_het_full:
 
 def _conclusive_loci(wildcards):
     ck = checkpoints.het_gate.get(run_id=wildcards.run_id, phenotype=wildcards.phenotype)
-    diag = pd.read_csv(ck.output.diagnostic, sep="\t")
-    return diag.loc[diag["status"] == "conclusive", "locus"].tolist()
+    return sorted(p.name for p in Path(ck.output.loci_dir).iterdir() if p.is_dir())
 
 
 def _conclusive_summaries(model):
@@ -100,7 +105,6 @@ def _conclusive_summaries(model):
 
 rule het_aggregate:
     input:
-        diagnostic=rules.het_gate.output.diagnostic,
         full_summaries=_conclusive_summaries("full"),
         null_summaries=_conclusive_summaries("null"),
     output:

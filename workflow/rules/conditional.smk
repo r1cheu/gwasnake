@@ -37,9 +37,8 @@ rule reml_conditional:
 rule extract_qtl_effects:
     input:
         summary=rules.reml_conditional.output.summary,
+        effects=rules.reml_conditional.output.effects,
         qtl=rules.qtl_subset.output.qtl,
-        qcovar=rules.make_qtl_covar.output.qcovar,
-        phenotype=rules.create_sample_list.output.phenotype,
     output:
         table="results/{run_id}/{phenotype}/conditional/qtl_effects.tsv",
     conda:
