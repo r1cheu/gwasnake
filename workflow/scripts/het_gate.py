@@ -34,6 +34,10 @@ X = StandardScaler().fit_transform(pcs[pc_cols].to_numpy(dtype=np.float64))
 label = KMeans(n_clusters=n_strata, random_state=0, n_init=10).fit_predict(X)
 stratum = pd.Series(label)
 
+pd.DataFrame({"FID": fid, "IID": common, "stratum": label}).to_csv(
+    snakemake.output.strata, sep="\t", index=False
+)
+
 loci_dir = Path(snakemake.output.loci_dir)
 loci_dir.mkdir(parents=True, exist_ok=True)
 

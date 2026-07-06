@@ -20,6 +20,7 @@ checkpoint het_gate:
         pca=rules.pca.output.pca,
     output:
         loci_dir=directory("results/{run_id}/{phenotype}/heterogeneity/loci"),
+        strata="results/{run_id}/{phenotype}/heterogeneity/strata.tsv",
     params:
         bfile=rules.extract_bed_step2.params.output_prefix,
         n_strata=config["heterogeneity"]["n_strata"],

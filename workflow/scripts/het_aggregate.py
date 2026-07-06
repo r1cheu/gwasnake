@@ -1,4 +1,5 @@
 import math
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -8,6 +9,8 @@ ALPHA = 0.05
 # residual below this fraction of total variance = AI-REML collapsed it to the
 # ~1e-6*Vp floor -> logL surface degenerate, the LRT is void (not a real signal)
 RESID_FLOOR_FRAC = 1e-4
+# a slope-variance ratio below this = AI-REML pinned it at the ~1e-6*Vp floor
+SLOPE_FLOOR_FRAC = 1e-4
 
 rows = []
 for full_summary, null_summary, locus in zip(
@@ -18,6 +21,13 @@ for full_summary, null_summary, locus in zip(
     full = pd.read_csv(full_summary, sep="\t")
     null = pd.read_csv(null_summary, sep="\t")
     sd = full[full["term"].str.endswith("/zd.tsv")].iloc[0]
+    # companion additive slope on the SAME strata: if it too is pinned at the
+    # floor the strata carry no estimable slope signal -> a floored zd is "no
+    # power", not "genuinely stable". n_strata is the fit-independent info count.
+    sa = full[full["term"].str.endswith("/za.tsv")].iloc[0]
+    za_ratio = float(sa["ratio"])
+    za_cols = pd.read_csv(Path(full_summary).parent / "za.tsv", sep="\t", nrows=0).columns
+    n_strata = len(za_cols) - 2  # drop FID, IID
 
     resid_full = float(full.loc[full["term"] == "Residual", "estimate"].iloc[0])
     resid_null = float(null.loc[null["term"] == "Residual", "estimate"].iloc[0])
@@ -45,6 +55,8 @@ for full_summary, null_summary, locus in zip(
             "logL_null": logl_null,
             "LRT": lrt,
             "p_lrt": p_lrt,
+            "za_ratio": za_ratio,
+            "n_strata": n_strata,
             "degenerate": degenerate,
         }
     )
@@ -66,6 +78,16 @@ if len(table):
     table["fdr"] = fdr
     table["classification"] = np.where(
         table["fdr"] < ALPHA, "background_dependent", "stable"
+    )
+    # split "stable": powered (zd or companion za estimable) vs low_power (both
+    # slopes pinned at the floor -> the design could not test stability here)
+    both_floored = (table["ratio_sd"] < SLOPE_FLOOR_FRAC) & (
+        table["za_ratio"] < SLOPE_FLOOR_FRAC
+    )
+    table["stable_support"] = np.where(
+        table["classification"] == "background_dependent",
+        "background_dependent",
+        np.where(both_floored, "low_power", "stable"),
     )
 
 table.to_csv(snakemake.output.table, sep="\t", index=False)

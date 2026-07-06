@@ -1,9 +1,8 @@
-run_id: "6983_peak"
+run_id: "peak_2"
 phenotype: "phenotype/sh_f1_new_replaced.phen"
 
 # which analyses rule all builds: any of gwas, conditional, heterogeneity
 analyses:
-  - conditional
   - heterogeneity
 
 phenotypes:
@@ -25,6 +24,7 @@ bfile:
   step1: "bfile/6983_train_xiansub_LDfilter"
   step2: "bfile/6983_train_xiansub"
 
+# optional CLASS column partitions QTL into variance classes (default: single class)
 qtl_list: "config/qtl_list.tsv"
 
 # two-step --indep-pairwise applied in order on the QTL-region-removed background
@@ -41,14 +41,15 @@ plink2:
 transform:
   gwas: iint
   conditional: dint
+  variance: dint
   heterogeneity: dint
 
 heterogeneity:
   # genetic-background strata from k-means on the background PCs (config.pca)
-  n_strata: 10
+  n_strata: 12
   het_min: 5
   # minimum per stratum for EACH homozygote class (AA and aa counted separately)
-  hom_min: 2
+  hom_min: 3
   # a locus is tested only if at least this many strata are three-class
   min_strata: 6
 
