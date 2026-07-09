@@ -1,9 +1,9 @@
-run_id: "peak_2"
+run_id: "variance_new_none"
 phenotype: "phenotype/sh_f1_new_replaced.phen"
 
-# which analyses rule all builds: any of gwas, conditional, heterogeneity
+# which analyses rule all builds: any of gwas, conditional, variance, heterogeneity
 analyses:
-  - heterogeneity
+  - variance
 
 phenotypes:
   - PanicleNeckLength
@@ -21,11 +21,15 @@ phenotypes:
   - HeadingDate
 
 bfile:
-  step1: "bfile/6983_train_xiansub_LDfilter"
-  step2: "bfile/6983_train_xiansub"
+  step1: "bfile/valid_LDfilter"
+  step2: "bfile/valid"
 
 # optional CLASS column partitions QTL into variance classes (default: single class)
-qtl_list: "config/qtl_list.tsv"
+qtl_list: "config/qtl_list_12_5k.tsv"
+
+# QTL regions removed from the background GRM (and, in variance, built into the
+# QTL GRM), shared by all non-GWAS analyses: all (whole qtl_list) | per_phenotype
+qtl_scope: all
 
 # two-step --indep-pairwise applied in order on the QTL-region-removed background
 ld_prune:
@@ -41,7 +45,7 @@ plink2:
 transform:
   gwas: iint
   conditional: dint
-  variance: dint
+  variance: none
   heterogeneity: dint
 
 heterogeneity:
