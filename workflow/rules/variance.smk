@@ -3,16 +3,15 @@
 # (shared background + QTL region) splits genetic variance into background vs
 # QTL-region additive and dominance components.
 #
-# The QTL GRM is built from the SAME scope-selected regions (config.qtl_scope)
-# that qtl.smk removes from the background, so the two GRMs are a clean partition
-# of step2 (no SNP shared) under either scope. The background is the shared
-# background_grm from qtl.smk.
+# The QTL GRM is built from the SAME gated regions (qtl_subset.output.regions) that
+# qtl.smk removes from the background, so the two GRMs are a clean partition of step2
+# (no SNP shared) under either scope. The background is the shared background_grm.
 
 
 rule qtl_region_bfile:
     input:
         bfile=rules.extract_bed_step2.output.bfile,
-        regions=qtl_regions,
+        regions=rules.qtl_subset.output.regions,
     output:
         bfile=temp(
             multiext(
@@ -51,8 +50,10 @@ rule qtl_region_grm:
         cpus_per_task=threads,
     params:
         prefix=rules.qtl_region_bfile.params.prefix,
+    log:
+        "logs/{run_id}/{phenotype}/qtl_region_grm.log",
     shell:
-        "gelex grm -b {params.prefix} --add --dom -o {params.prefix} -t {threads} --gm NS"
+        "gelex grm -b {params.prefix} --mode AD -o {params.prefix} -t {threads} --gm NS &> {log}"
 
 
 rule reml_variance:
@@ -61,8 +62,7 @@ rule reml_variance:
         bg_grm=rules.background_grm.output.grm,
         qtl_grm=rules.qtl_region_grm.output.grm,
     output:
-        summary="results/{run_id}/{phenotype}/variance/reml.summary",
-        effects="results/{run_id}/{phenotype}/variance/reml.effects",
+        multiext("results/{run_id}/{phenotype}/variance/reml", summary=".summary", effects=".effects"),
     threads: config["gelex"]["reml_threads"]
     resources:
         cpus_per_task=threads,
@@ -71,9 +71,11 @@ rule reml_variance:
         qtl_prefix=rules.qtl_region_grm.params.prefix,
         out_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.phenotype}/variance/reml",
         transform=f"--transform {config['transform']['variance']}" if config["transform"]["variance"] != "none" else "",
+    log:
+        "logs/{run_id}/{phenotype}/reml_variance.log",
     shell:
         """
-        gelex reml -p {input.phenotype} --grm {params.bg_prefix}.add {params.bg_prefix}.dom {params.qtl_prefix}.add {params.qtl_prefix}.dom {params.transform} -o {params.out_prefix} -t {threads}
+        gelex reml -p {input.phenotype} --grm {params.bg_prefix}.add {params.qtl_prefix}.add {params.bg_prefix}.dom {params.qtl_prefix}.dom {params.transform} -o {params.out_prefix} -t {threads} &> {log}
         """
 
 
@@ -84,5 +86,7 @@ rule variance_table:
         table="results/{run_id}/{phenotype}/variance/variance.tsv",
     conda:
         "../envs/base.yml"
+    log:
+        "logs/{run_id}/{phenotype}/variance_table.log",
     script:
         "../scripts/variance_table.py"

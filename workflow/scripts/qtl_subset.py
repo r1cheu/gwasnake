@@ -2,18 +2,17 @@ import numpy as np
 import pandas as pd
 from bed_reader import open_bed
 
+# qtl_scope selects the candidate QTL pool for THIS phenotype's subsample:
+#   per_phenotype -> only this phenotype's rows
+#   all           -> every QTL in the list (deduped by SNP), one shared core-loci panel
+scope = snakemake.config["qtl_scope"]
 qtl = pd.read_csv(snakemake.config["qtl_list"], sep="\t")
-qtl = qtl[qtl["PHENOTYPE"] == snakemake.wildcards.phenotype].reset_index(drop=True)
+if scope == "per_phenotype":
+    qtl = qtl[qtl["PHENOTYPE"] == snakemake.wildcards.phenotype]
+elif scope != "all":
+    raise ValueError(f"qtl_scope must be 'all' or 'per_phenotype', got {scope!r}")
+qtl = qtl.drop_duplicates(subset="SNP").reset_index(drop=True)
 
-# regions cover ALL QTL: a locus's region is removed from the background GRM
-# regardless of whether the SNP itself is separately estimable in this subsample
-# plink2 range format: CHR START END [set ID]
-qtl[["CHR", "START", "END", "SNP"]].to_csv(
-    snakemake.output.regions, sep="\t", header=False, index=False
-)
-
-# step2 bed is already the phenotype subsample; a SNP missing a genotype class
-# here makes its additive and dominance covariates collinear (not identifiable)
 bed = open_bed(snakemake.params.bfile + ".bed")
 sid_pos = {s: i for i, s in enumerate(bed.sid)}
 col_idx = qtl["SNP"].map(sid_pos)
@@ -26,5 +25,11 @@ for k, idx in enumerate(qtl.index[col_idx.notna()]):
     col = genotype[:, k]
     n_classes[idx] = len(np.unique(col[~np.isnan(col)]))
 
-keep = n_classes == 3
-qtl[keep].to_csv(snakemake.output.qtl, sep="\t", index=False)
+qtl = qtl[n_classes == 3].reset_index(drop=True)
+qtl.to_csv(snakemake.output.qtl, sep="\t", index=False)
+
+# regions derive from the SAME gated set, so background removal, the QTL GRM, and the
+# fixed effects can never diverge. plink2 range format: CHR START END [set ID]
+qtl[["CHR", "START", "END", "SNP"]].to_csv(
+    snakemake.output.regions, sep="\t", header=False, index=False
+)

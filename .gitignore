@@ -17,3 +17,4 @@ CLAUDE.md
 # pixi environments
 .pixi/*
 !.pixi/config.toml
+/config/qtl_list_25k.tsv

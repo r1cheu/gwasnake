@@ -30,6 +30,7 @@ QTL_LOCI = {
 QTL_PHENOTYPE = list(QTL_LOCI)
 
 
+include: "rules/common.smk"
 include: "rules/prepare.smk"
 include: "rules/gwas.smk"
 include: "rules/qtl.smk"
@@ -46,35 +47,6 @@ onstart:
 
 # target rules
 # -----------------------------------------------------
-def analysis_targets(analysis):
-    if analysis == "gwas":
-        return expand(
-            "results/{run_id}/{phenotype}/joint_manhattan_{suffix}.png",
-            run_id=config["run_id"],
-            phenotype=PHENOTYPE,
-            suffix=["A", "D", "AD"],
-        )
-    if analysis == "conditional":
-        return expand(
-            "results/{run_id}/{phenotype}/conditional/qtl_effects.tsv",
-            run_id=config["run_id"],
-            phenotype=QTL_PHENOTYPE,
-        )
-    if analysis == "variance":
-        return expand(
-            "results/{run_id}/{phenotype}/variance/variance.tsv",
-            run_id=config["run_id"],
-            phenotype=QTL_PHENOTYPE,
-        )
-    if analysis == "heterogeneity":
-        return expand(
-            "results/{run_id}/{phenotype}/heterogeneity/heterogeneity.tsv",
-            run_id=config["run_id"],
-            phenotype=QTL_PHENOTYPE,
-        )
-    raise ValueError(f"Unknown analysis: {analysis}")
-
-
 rule gwas:
     input:
         analysis_targets("gwas"),
@@ -83,7 +55,6 @@ rule gwas:
 rule conditional:
     input:
         analysis_targets("conditional"),
-
 
 rule variance:
     input:

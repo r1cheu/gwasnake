@@ -29,10 +29,12 @@ rule gelex_grm:
     params:
         bfile_prefix=rules.extract_bed_step1.params.output_prefix,
         output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.phenotype}/grm",
+    log:
+        "logs/{run_id}/{phenotype}/gelex_grm.log",
     shell:
         """
-        gelex grm -b {params.bfile_prefix} --add --dom -o {params.output_prefix} -t {threads} --gm NS
-        gelex grm -b {params.bfile_prefix} --add --dom -o {params.output_prefix} -t {threads} --loco --gm NS
+        gelex grm -b {params.bfile_prefix} --mode AD -o {params.output_prefix} -t {threads} --gm NS &> {log}
+        gelex grm -b {params.bfile_prefix} --mode AD -o {params.output_prefix} -t {threads} --loco --gm NS &>> {log}
         """
 
 
@@ -51,9 +53,11 @@ rule gelex_assoc:
         bfile_prefix=rules.extract_bed_step2.params.output_prefix,
         grm_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.phenotype}/grm",
         transform=f"--transform {config['transform']['gwas']}" if config["transform"]["gwas"] != "none" else "",
+    log:
+        "logs/{run_id}/{phenotype}/gelex_assoc.log",
     shell:
         """
-        gelex assoc -b {params.bfile_prefix} -p {input.phenotype} --grm {params.grm_prefix}.add {params.grm_prefix}.dom --test joint {params.transform} --qcovar {input.qcovar} --gm NC -o results/{wildcards.run_id}/{wildcards.phenotype}/joint_assoc -t {threads} --loco
+        gelex assoc -b {params.bfile_prefix} -p {input.phenotype} --mode AD --grm {params.grm_prefix}.add {params.grm_prefix}.dom {params.transform} --qcovar {input.qcovar} --gm NC -o results/{wildcards.run_id}/{wildcards.phenotype}/joint_assoc -t {threads} --loco &> {log}
         """
 
 
@@ -61,10 +65,10 @@ rule plot_gelex_joint:
     input:
         summary="results/{run_id}/{phenotype}/joint_assoc.gwas.tsv",
     output:
-        png_a="results/{run_id}/{phenotype}/joint_manhattan_A.png",
-        png_d="results/{run_id}/{phenotype}/joint_manhattan_D.png",
-        png_ad="results/{run_id}/{phenotype}/joint_manhattan_AD.png",
+        multiext("results/{run_id}/{phenotype}/joint_manhattan", png_a="_A.png", png_d="_D.png", png_ad="_AD.png"),
     conda:
         "../envs/base.yml"
+    log:
+        "logs/{run_id}/{phenotype}/plot_gelex.log",
     script:
         "../scripts/plot_gelex_result.py"

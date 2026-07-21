@@ -67,8 +67,9 @@ rule pca:
     input:
         bfile=rules.extract_bed_step1.output.bfile,
     output:
-        pca=temp("results/{run_id}/{phenotype}/common/pca.eigenvec"),
-        eval=temp("results/{run_id}/{phenotype}/common/pca.eigenval"),
+        temp(
+            multiext("results/{run_id}/{phenotype}/common/pca", pca=".eigenvec", eval=".eigenval")
+        )
     conda:
         "../envs/plink2.yml"
     threads: config["plink2"]["pca_threads"]
@@ -94,5 +95,7 @@ rule clean_pca_eigenvec:
         covar=temp("results/{run_id}/{phenotype}/common/qcovar"),
     conda:
         "../envs/base.yml"
+    log:
+        "logs/{run_id}/{phenotype}/clean_pca.log",
     shell:
-        "sed '1s/^#//' {input} > {output}"
+        "sed '1s/^#//' {input} > {output} 2> {log}"

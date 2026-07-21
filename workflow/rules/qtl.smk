@@ -8,23 +8,16 @@
 # is scope-controlled, so all three analyses share one background_grm.
 
 
-def qtl_regions(wildcards):
-    scope = config["qtl_scope"]
-    if scope == "all":
-        return f"results/{wildcards.run_id}/all_qtl_regions.txt"
-    if scope == "per_phenotype":
-        return f"results/{wildcards.run_id}/{wildcards.phenotype}/qtl/regions.txt"
-    raise ValueError(f"qtl_scope must be 'all' or 'per_phenotype', got {scope!r}")
-
-
 rule all_qtl_regions:
     input:
         qtl_list=config["qtl_list"],
     output:
         regions="results/{run_id}/all_qtl_regions.txt",
+    log:
+        "logs/{run_id}/all_qtl_regions.log",
     shell:
         # plink2 range format: CHR START END SNP; drop header, reorder columns
-        "tail -n +2 {input.qtl_list} | awk -F'\\t' '{{print $1\"\\t\"$6\"\\t\"$7\"\\t\"$2}}' > {output.regions}"
+        "tail -n +2 {input.qtl_list} | awk -F'\\t' '{{print $1\"\\t\"$6\"\\t\"$7\"\\t\"$2}}' > {output.regions} 2> {log}"
 
 
 rule qtl_subset:
@@ -35,6 +28,8 @@ rule qtl_subset:
         regions="results/{run_id}/{phenotype}/qtl/regions.txt",
     params:
         bfile=rules.extract_bed_step2.params.output_prefix,
+    log:
+        "logs/{run_id}/{phenotype}/qtl_subset.log",
     script:
         "../scripts/qtl_subset.py"
 
@@ -87,5 +82,7 @@ rule background_grm:
         cpus_per_task=threads,
     params:
         prefix=rules.background_bfile.params.prefix,
+    log:
+        "logs/{run_id}/{phenotype}/background_grm.log",
     shell:
-        "gelex grm -b {params.prefix} --add --dom -o {params.prefix} -t {threads} --gm NS"
+        "gelex grm -b {params.prefix} --mode AD -o {params.prefix} -t {threads} --gm NS &> {log}"
