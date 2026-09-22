@@ -3,14 +3,11 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from statsmodels.stats.multitest import multipletests
 
 # classify on BH-FDR, not the raw boundary-LRT p-value
 ALPHA = 0.05
-# residual below this fraction of total variance = AI-REML collapsed it to the
-# ~1e-6*Vp floor -> logL surface degenerate, the LRT is void (not a real signal)
 RESID_FLOOR_FRAC = 1e-4
-# a slope-variance ratio below this = AI-REML pinned it at the ~1e-6*Vp floor
-SLOPE_FLOOR_FRAC = 1e-4
 
 rows = []
 for full_summary, null_summary, locus in zip(
@@ -20,13 +17,19 @@ for full_summary, null_summary, locus in zip(
 ):
     full = pd.read_csv(full_summary, sep="\t")
     null = pd.read_csv(null_summary, sep="\t")
-    sd = full[full["term"].str.endswith("/zd.tsv")].iloc[0]
-    # companion additive slope on the SAME strata: if it too is pinned at the
-    # floor the strata carry no estimable slope signal -> a floored zd is "no
-    # power", not "genuinely stable". n_strata is the fit-independent info count.
-    sa = full[full["term"].str.endswith("/za.tsv")].iloc[0]
+    if (
+        "CONVERGENCE_FAILED" in full["term"].values
+        or "CONVERGENCE_FAILED" in null["term"].values
+    ):
+        continue
+    sd = full[full["term"] == "zd"].iloc[0]
+    sa = full[full["term"] == "za"].iloc[0]
     za_ratio = float(sa["ratio"])
-    za_cols = pd.read_csv(Path(full_summary).parent / "za.tsv", sep="\t", nrows=0).columns
+    za_constrained = str(sa["pvalue"]).strip() == "-"
+    zd_constrained = str(sd["pvalue"]).strip() == "-"
+    za_cols = pd.read_csv(
+        Path(full_summary).parent / "za.tsv", sep="\t", nrows=0
+    ).columns
     n_strata = len(za_cols) - 2  # drop FID, IID
 
     resid_full = float(full.loc[full["term"] == "Residual", "estimate"].iloc[0])
@@ -56,6 +59,8 @@ for full_summary, null_summary, locus in zip(
             "LRT": lrt,
             "p_lrt": p_lrt,
             "za_ratio": za_ratio,
+            "za_constrained": za_constrained,
+            "zd_constrained": zd_constrained,
             "n_strata": n_strata,
             "degenerate": degenerate,
         }
@@ -65,25 +70,19 @@ for full_summary, null_summary, locus in zip(
 table = pd.DataFrame(rows)
 table = table[~table["degenerate"]].drop(columns="degenerate").reset_index(drop=True)
 
-# BH-FDR over the retained loci
+# BH-FDR over the retained loci (statsmodels)
 table["fdr"] = np.nan
 table["classification"] = pd.Series(dtype=str)
 if len(table):
     p = table["p_lrt"].to_numpy()
-    n = len(p)
-    order = p.argsort()
-    q = np.clip(np.minimum.accumulate((p[order] * n / np.arange(1, n + 1))[::-1])[::-1], 0, 1)
-    fdr = np.empty(n)
-    fdr[order] = q
+    _, fdr, _, _ = multipletests(p, alpha=ALPHA, method="fdr_bh")
     table["fdr"] = fdr
     table["classification"] = np.where(
         table["fdr"] < ALPHA, "background_dependent", "stable"
     )
     # split "stable": powered (zd or companion za estimable) vs low_power (both
-    # slopes pinned at the floor -> the design could not test stability here)
-    both_floored = (table["ratio_sd"] < SLOPE_FLOOR_FRAC) & (
-        table["za_ratio"] < SLOPE_FLOOR_FRAC
-    )
+    # slopes clamped at the floor -> the design could not test stability here)
+    both_floored = table["zd_constrained"] & table["za_constrained"]
     table["stable_support"] = np.where(
         table["classification"] == "background_dependent",
         "background_dependent",

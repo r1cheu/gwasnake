@@ -4,10 +4,9 @@ import gelex
 import numpy as np
 import pandas as pd
 from bed_reader import open_bed
+from bed_utils import align_to_bed
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
-
-from bed_utils import align_to_bed
 
 n_strata = snakemake.params.n_strata
 het_min = snakemake.params.het_min

@@ -7,7 +7,7 @@ def analysis_targets(analysis):
     """Return the target output files for a given analysis type."""
     if analysis == "gwas":
         return expand(
-            "results/{run_id}/{phenotype}/joint_manhattan_{suffix}.png",
+            "results/{run_id}/{phenotype}/manhattan_{suffix}.png",
             run_id=config["run_id"],
             phenotype=PHENOTYPE,
             suffix=["A", "D", "AD"],
@@ -45,20 +45,25 @@ def qtl_regions(wildcards):
 
 def het_locus_file(name):
     """Return a function that resolves a locus file within the checkpoint output."""
+
     def inner(wildcards):
         checkpoints.het_gate.get(run_id=wildcards.run_id, phenotype=wildcards.phenotype)
         return f"results/{wildcards.run_id}/{wildcards.phenotype}/heterogeneity/loci/{wildcards.locus}/{name}"
+
     return inner
 
 
 def het_conclusive_loci(wildcards):
     """Return sorted list of locus directory names from the het_gate checkpoint."""
-    ck = checkpoints.het_gate.get(run_id=wildcards.run_id, phenotype=wildcards.phenotype)
+    ck = checkpoints.het_gate.get(
+        run_id=wildcards.run_id, phenotype=wildcards.phenotype
+    )
     return sorted(p.name for p in Path(ck.output.loci_dir).iterdir() if p.is_dir())
 
 
 def het_conclusive_summaries(model):
     """Return a function that expands to all conclusive locus summary paths for a given model."""
+
     def inner(wildcards):
         return expand(
             "results/{run_id}/{phenotype}/heterogeneity/loci/{locus}/reml.{model}.summary",
@@ -67,4 +72,5 @@ def het_conclusive_summaries(model):
             locus=het_conclusive_loci(wildcards),
             model=model,
         )
+
     return inner

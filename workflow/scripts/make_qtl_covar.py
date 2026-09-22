@@ -11,10 +11,12 @@ RANK_TOL = 1e-6
 
 
 def full_rank_loci(additive, dominant):
-    # greedy modified Gram-Schmidt: keep a locus only if BOTH its centered a and d
-    # columns add rank over the intercept and already-kept columns, so the assembled
-    # fixed-effect design X stays full column rank (X'V^-1 X positive definite). The
-    # per-SNP 3-class gate cannot catch cross-locus LD or a rare homozygote class.
+    """Filter loci to a full-rank design via greedy modified Gram-Schmidt.
+
+    A locus is kept only if BOTH its centered additive and dominance columns
+    add rank over the intercept and all previously kept columns. This ensures
+    the assembled QTL covariate matrix is full column rank.
+    """
     n = additive.shape[0]
     basis = [np.full(n, 1.0 / np.sqrt(n))]  # normalized intercept
     keep = np.zeros(additive.shape[1], dtype=bool)
@@ -29,6 +31,8 @@ def full_rank_loci(additive, dominant):
                 break
             trial.append(v / np.linalg.norm(v))
         else:
+            # executed only if neither column broke out of the loop -> both
+            # a and d are linearly independent of the current basis
             basis = trial
             keep[j] = True
     return keep
@@ -49,10 +53,10 @@ genotype = bed.read(index=np.s_[row_idx, sid_idx], dtype="float64")
 additive = np.copy(genotype, order="F")
 dominant = np.copy(genotype, order="F")
 gelex.encode_inplace(
-    additive, effect=gelex.GeneticMode.A, method=gelex.GenotypeMethod.Center
+    additive, effect=gelex.GeneticMode.A, method=gelex.GenotypeMethod.NOIACenter
 )
 gelex.encode_inplace(
-    dominant, effect=gelex.GeneticMode.D, method=gelex.GenotypeMethod.Center
+    dominant, effect=gelex.GeneticMode.D, method=gelex.GenotypeMethod.NOIACenter
 )
 
 keep = full_rank_loci(additive, dominant)

@@ -17,7 +17,7 @@ rule all_qtl_regions:
         "logs/{run_id}/all_qtl_regions.log",
     shell:
         # plink2 range format: CHR START END SNP; drop header, reorder columns
-        "tail -n +2 {input.qtl_list} | awk -F'\\t' '{{print $1\"\\t\"$6\"\\t\"$7\"\\t\"$2}}' > {output.regions} 2> {log}"
+        'tail -n +2 {input.qtl_list} | awk -F\'\\t\' \'{{print $1"\\t"$6"\\t"$7"\\t"$2}}\' > {output.regions} 2> {log}'
 
 
 rule qtl_subset:
@@ -26,10 +26,10 @@ rule qtl_subset:
     output:
         qtl="results/{run_id}/{phenotype}/qtl/qtl.tsv",
         regions="results/{run_id}/{phenotype}/qtl/regions.txt",
-    params:
-        bfile=rules.extract_bed_step2.params.output_prefix,
     log:
         "logs/{run_id}/{phenotype}/qtl_subset.log",
+    params:
+        bfile=rules.extract_bed_step2.params.output_prefix,
     script:
         "../scripts/qtl_subset.py"
 
@@ -48,10 +48,10 @@ rule background_bfile:
                 ".fam",
             )
         ),
-    conda:
-        "../envs/plink2.yml"
     log:
         "logs/{run_id}/{phenotype}/background_bfile.log",
+    conda:
+        "../envs/plink2.yml"
     params:
         step2=rules.extract_bed_step2.params.output_prefix,
         prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.phenotype}/qtl/background",
@@ -59,9 +59,9 @@ rule background_bfile:
         ld1=config["ld_prune"][1],
     shell:
         """
-        plink2 --bfile {params.step2} --exclude range {input.regions} --indep-pairwise {params.ld0} --out {params.prefix}.p1 &> {log}
-        plink2 --bfile {params.step2} --extract {params.prefix}.p1.prune.in --indep-pairwise {params.ld1} --out {params.prefix}.p2 &>> {log}
-        plink2 --bfile {params.step2} --extract {params.prefix}.p2.prune.in --make-bed --out {params.prefix} &>> {log}
+        plink2 --bfile {params.step2} --exclude range {input.regions} --indep-pairwise {params.ld0} --out {params.prefix}.p1 &>{log}
+        plink2 --bfile {params.step2} --extract {params.prefix}.p1.prune.in --indep-pairwise {params.ld1} --out {params.prefix}.p2 &>>{log}
+        plink2 --bfile {params.step2} --extract {params.prefix}.p2.prune.in --make-bed --out {params.prefix} &>>{log}
         """
 
 
@@ -72,17 +72,18 @@ rule background_grm:
     output:
         grm=multiext(
             "results/{run_id}/{phenotype}/qtl/background",
-            ".add.bin",
-            ".add.id",
-            ".dom.bin",
-            ".dom.id",
+            ".A.bin",
+            ".A.id",
+            ".D.bin",
+            ".D.id",
         ),
+    log:
+        "logs/{run_id}/{phenotype}/background_grm.log",
     threads: config["gelex"]["grm_threads"]
     resources:
         cpus_per_task=threads,
     params:
         prefix=rules.background_bfile.params.prefix,
-    log:
-        "logs/{run_id}/{phenotype}/background_grm.log",
     shell:
-        "gelex grm -b {params.prefix} --mode AD -o {params.prefix} -t {threads} --gm NS &> {log}"
+        "gelex grm -b {params.prefix} --mode AD "
+        "-o {params.prefix} -t {threads} --gm NS &>{log}"

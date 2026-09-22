@@ -3,12 +3,18 @@ rule create_sample_list:
     output:
         sample_list="results/{run_id}/{phenotype}/common/sample.list",
         phenotype="results/{run_id}/{phenotype}/common/phenotype",
-    conda:
-        "../envs/base.yml"
     log:
         "logs/{run_id}/{phenotype}/create_sample_list.log",
-    script:
-        "../scripts/create_sample_list.py"
+    conda:
+        "../envs/base.yml"
+    run:
+        import pandas as pd
+
+        phenotype = pd.read_csv(config["phenotype"], sep="\t")[
+            ["FID", "IID", wildcards.phenotype]
+        ].dropna()
+        phenotype.to_csv(output.phenotype, sep="\t", index=False)
+        phenotype.iloc[:, :2].to_csv(output.sample_list, sep="\t", index=False)
 
 
 # Extract phenotyped samples from main bfile
@@ -24,16 +30,16 @@ rule extract_bed_step1:
                 ".fam",
             )
         ),
-    conda:
-        "../envs/plink2.yml"
     log:
         "logs/{run_id}/{phenotype}/step1_plink.log",
+    conda:
+        "../envs/plink2.yml"
     params:
         step1=config["bfile"]["step1"],
         output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.phenotype}/common/step1",
     shell:
         """
-        plink2 --bfile {params.step1} --keep {input.sample_list} --maf 0.01 --geno 0.1 --out {params.output_prefix} --make-bed --threads 1 &> {log}
+        plink2 --bfile {params.step1} --keep {input.sample_list} --maf 0.01 --geno 0.1 --out {params.output_prefix} --make-bed --threads 1 &>{log}
         """
 
 
@@ -49,16 +55,16 @@ rule extract_bed_step2:
                 ".fam",
             )
         ),
-    conda:
-        "../envs/plink2.yml"
     log:
         "logs/{run_id}/{phenotype}/step2_plink.log",
+    conda:
+        "../envs/plink2.yml"
     params:
         step2=config["bfile"]["step2"],
         output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.phenotype}/common/step2",
     shell:
         """
-        plink2 --bfile {params.step2} --keep {input.sample_list} --maf 0.001 --out {params.output_prefix} --make-bed --threads 1 &> {log}
+        plink2 --bfile {params.step2} --keep {input.sample_list} --maf 0.001 --out {params.output_prefix} --make-bed --threads 1 &>{log}
         """
 
 
@@ -68,8 +74,14 @@ rule pca:
         bfile=rules.extract_bed_step1.output.bfile,
     output:
         temp(
-            multiext("results/{run_id}/{phenotype}/common/pca", pca=".eigenvec", eval=".eigenval")
-        )
+            multiext(
+                "results/{run_id}/{phenotype}/common/pca",
+                pca=".eigenvec",
+                eval=".eigenval",
+            )
+        ),
+    log:
+        "logs/{run_id}/{phenotype}/pca.log",
     conda:
         "../envs/plink2.yml"
     threads: config["plink2"]["pca_threads"]
@@ -79,11 +91,9 @@ rule pca:
         bfile=rules.extract_bed_step1.params.output_prefix,
         comp=config["pca"],
         output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.phenotype}/common/pca",
-    log:
-        "logs/{run_id}/{phenotype}/pca.log",
     shell:
         """
-        plink2 --bfile {params.bfile} --pca {params.comp} --out {params.output_prefix} --threads {threads} &> {log}
+        plink2 --bfile {params.bfile} --pca {params.comp} --out {params.output_prefix} --threads {threads} &>{log}
         """
 
 
@@ -93,9 +103,9 @@ rule clean_pca_eigenvec:
         pca=rules.pca.output.pca,
     output:
         covar=temp("results/{run_id}/{phenotype}/common/qcovar"),
-    conda:
-        "../envs/base.yml"
     log:
         "logs/{run_id}/{phenotype}/clean_pca.log",
+    conda:
+        "../envs/base.yml"
     shell:
         "sed '1s/^#//' {input} > {output} 2> {log}"

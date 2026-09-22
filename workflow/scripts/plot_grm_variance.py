@@ -4,24 +4,24 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.patches import Patch
 
 
 def read_variance_components(table: Path, label: str) -> dict[str, float | str]:
     variance_table = pd.read_csv(table, sep="\t")
-    ratios = variance_table.set_index("component")["ratio"]
-    ratio_ses = pd.to_numeric(
-        variance_table.set_index("component")["ratio_se"], errors="coerce"
-    ).fillna(0.0)
+    by_component = variance_table.set_index("component")
+    ratios = by_component["ratio"]
+    ratio_ses = pd.to_numeric(by_component["ratio_se"], errors="coerce").fillna(0.0)
     return {
         "label": label,
-        "qtl_add": float(ratios.get("qtl_add", 0.0)),
-        "qtl_dom": float(ratios.get("qtl_dom", 0.0)),
-        "background_add": float(ratios.get("background_add", 0.0)),
-        "background_dom": float(ratios.get("background_dom", 0.0)),
-        "qtl_add_se": float(ratio_ses.get("qtl_add", 0.0)),
-        "qtl_dom_se": float(ratio_ses.get("qtl_dom", 0.0)),
-        "background_add_se": float(ratio_ses.get("background_add", 0.0)),
-        "background_dom_se": float(ratio_ses.get("background_dom", 0.0)),
+        "qtl_add": float(ratios.get("qtl_A", 0.0)),
+        "qtl_dom": float(ratios.get("qtl_D", 0.0)),
+        "background_add": float(ratios.get("background_A", 0.0)),
+        "background_dom": float(ratios.get("background_D", 0.0)),
+        "qtl_add_se": float(ratio_ses.get("qtl_A", 0.0)),
+        "qtl_dom_se": float(ratio_ses.get("qtl_D", 0.0)),
+        "background_add_se": float(ratio_ses.get("background_A", 0.0)),
+        "background_dom_se": float(ratio_ses.get("background_D", 0.0)),
     }
 
 
@@ -31,7 +31,9 @@ def plot_variance_components(data: pd.DataFrame, output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     labels = data["label"].tolist()
     y = np.arange(len(labels))
-    height = 0.34
+    height = 0.30
+    # wraps both bars (span +-0.30) with padding, still leaves a gap between traits
+    total_height = 0.72
 
     fig, axes = plt.subplots(
         1,
@@ -42,9 +44,10 @@ def plot_variance_components(data: pd.DataFrame, output: Path) -> None:
     colors = {
         "qtl": "#0FA7A8",
         "background": "#E8B900",
-        "total": "#E879F9",
+        "total": "#9CA3AF",
         "se": "#FF6B4A",
     }
+    total_alpha = 0.20
 
     qtl_add = data["qtl_add"].to_numpy()
     qtl_dom = data["qtl_dom"].to_numpy()
@@ -54,32 +57,30 @@ def plot_variance_components(data: pd.DataFrame, output: Path) -> None:
     qtl_dom_se = data["qtl_dom_se"].to_numpy()
     background_add_se = data["background_add_se"].to_numpy()
     background_dom_se = data["background_dom_se"].to_numpy()
+
+    error_kw = dict(
+        ecolor=colors["se"],
+        elinewidth=0.3,
+        capsize=3,
+        capthick=0.3,
+        clip_on=False,
+        zorder=3,
+    )
     panels = [
         ("Total", qtl_add + qtl_dom, background_add + background_dom, None, None),
         ("Additive", qtl_add, background_add, qtl_add_se, background_add_se),
         ("Dominance", qtl_dom, background_dom, qtl_dom_se, background_dom_se),
     ]
 
-    all_totals = [
-        qtl_values + background_values
-        for _, qtl_values, background_values, _, _ in panels
-    ]
-    all_error_upper_limits = [
-        qtl_values + qtl_se
-        for _, qtl_values, _, qtl_se, _ in panels
-        if qtl_se is not None
-    ] + [
-        background_values + background_se
-        for _, _, background_values, _, background_se in panels
-        if background_se is not None
-    ]
-    x_max = (
-        max(
-            [total.max() for total in all_totals]
-            + [error_limit.max() for error_limit in all_error_upper_limits]
-        )
-        + 0.1
-    )
+    # determine x-axis limit across all panels
+    all_upper_bounds = []
+    for _, qtl_values, background_values, qtl_se, background_se in panels:
+        all_upper_bounds.append((qtl_values + background_values).max())
+        if qtl_se is not None:
+            all_upper_bounds.append((qtl_values + qtl_se).max())
+        if background_se is not None:
+            all_upper_bounds.append((background_values + background_se).max())
+    x_max = max(all_upper_bounds) + 0.1
 
     axes[0].set_ylabel("Trait")
     for panel_index, (
@@ -88,19 +89,23 @@ def plot_variance_components(data: pd.DataFrame, output: Path) -> None:
     ) in enumerate(zip(axes, panels)):
         total_values = qtl_values + background_values
         ax.barh(
+            y,
+            total_values,
+            total_height,
+            color=colors["total"],
+            alpha=total_alpha,
+            linewidth=0,
+            zorder=0,
+        )
+        ax.barh(
             y - height / 2,
             qtl_values,
             height,
             color=colors["qtl"],
             label="QTL",
             xerr=qtl_se,
-            error_kw={
-                "ecolor": colors["se"],
-                "elinewidth": 0.3,
-                "capsize": 3,
-                "capthick": 0.3,
-                "clip_on": False,
-            },
+            error_kw=error_kw,
+            zorder=2,
         )
         ax.barh(
             y + height / 2,
@@ -109,24 +114,9 @@ def plot_variance_components(data: pd.DataFrame, output: Path) -> None:
             color=colors["background"],
             label="Background",
             xerr=background_se,
-            error_kw={
-                "ecolor": colors["se"],
-                "elinewidth": 0.3,
-                "capsize": 3,
-                "capthick": 0.3,
-                "clip_on": False,
-            },
+            error_kw=error_kw,
+            zorder=2,
         )
-        for index, total_value in enumerate(total_values):
-            ax.vlines(
-                total_value,
-                y[index] - height,
-                y[index] + height,
-                color=colors["total"],
-                alpha=0.55,
-                linestyle=(0, (2, 2)),
-                linewidth=0.7,
-            )
         ax.set_title(title)
         ax.set_yticks(y)
         ax.set_yticklabels(labels if panel_index == 0 else [])
@@ -140,16 +130,9 @@ def plot_variance_components(data: pd.DataFrame, output: Path) -> None:
         ax.spines["bottom"].set_linewidth(0.2)
         ax.tick_params(width=0.2, length=4)
 
-    axes[0].plot(
-        [],
-        [],
-        color=colors["total"],
-        alpha=0.8,
-        linestyle=(0, (2, 2)),
-        linewidth=0.70,
-        label="Total variance",
-    )
     handles, legend_labels = axes[0].get_legend_handles_labels()
+    handles.append(Patch(facecolor=colors["total"], alpha=total_alpha, linewidth=0))
+    legend_labels.append("Total (QTL + background)")
     fig.legend(
         handles,
         legend_labels,
