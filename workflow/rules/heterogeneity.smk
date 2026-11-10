@@ -1,3 +1,34 @@
+from pathlib import Path
+
+
+def het_locus_file(name):
+    def inner(wildcards):
+        checkpoints.het_gate.get(run_id=wildcards.run_id, phenotype=wildcards.phenotype)
+        return f"results/{wildcards.run_id}/{wildcards.phenotype}/heterogeneity/loci/{wildcards.locus}/{name}"
+
+    return inner
+
+
+def het_conclusive_loci(wildcards):
+    ck = checkpoints.het_gate.get(
+        run_id=wildcards.run_id, phenotype=wildcards.phenotype
+    )
+    return sorted(p.name for p in Path(ck.output.loci_dir).iterdir() if p.is_dir())
+
+
+def het_conclusive_summaries(model):
+    def inner(wildcards):
+        return expand(
+            "results/{run_id}/{phenotype}/heterogeneity/loci/{locus}/reml.{model}.summary",
+            run_id=wildcards.run_id,
+            phenotype=wildcards.phenotype,
+            locus=het_conclusive_loci(wildcards),
+            model=model,
+        )
+
+    return inner
+
+
 wildcard_constraints:
     locus="[^/]+",
 
@@ -43,7 +74,7 @@ rule reml_het_null:
     params:
         grm_prefix=rules.background_grm.params.prefix,
         out_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.phenotype}/heterogeneity/loci/{wildcards.locus}/reml.null",
-        transform=config["transform"]["heterogeneity"],
+        transform=config["transform"],
     shell:
         "gelex reml -p {input.phenotype} "
         "--random {params.grm_prefix}.A:g {params.grm_prefix}.D:g {input.za}:q "
@@ -77,7 +108,7 @@ rule reml_het_full:
     params:
         grm_prefix=rules.background_grm.params.prefix,
         out_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.phenotype}/heterogeneity/loci/{wildcards.locus}/reml.full",
-        transform=config["transform"]["heterogeneity"],
+        transform=config["transform"],
     shell:
         "gelex reml -p {input.phenotype} "
         "--random {params.grm_prefix}.A:g {params.grm_prefix}.D:g {input.za}:q {input.zd}:q "

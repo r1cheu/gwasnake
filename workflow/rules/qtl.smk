@@ -1,11 +1,10 @@
-# Shared QTL skeleton: subset QTL, remove their regions, LD-prune, build background GRM.
-# Consumed by conditional.smk (task A), variance.smk, and heterogeneity.smk (task B).
-#
-# config.qtl_scope picks which QTL regions are removed from the background (and,
-# in variance.smk, built into the QTL GRM): this phenotype's QTL only, or every
-# QTL in the list. Fixed effects (conditional) and loci (heterogeneity) always
-# come from the per-phenotype qtl.tsv; only the background's removed-region set
-# is scope-controlled, so all three analyses share one background_grm.
+# Select QTL, remove their regions, LD-prune, and build the background GRMs.
+
+
+def qtl_regions(wildcards):
+    if config["qtl_scope"] == "all":
+        return f"results/{wildcards.run_id}/all_qtl_regions.txt"
+    return f"results/{wildcards.run_id}/{wildcards.phenotype}/qtl/regions.txt"
 
 
 rule all_qtl_regions:
@@ -23,6 +22,7 @@ rule all_qtl_regions:
 rule qtl_subset:
     input:
         bfile=rules.extract_bed_step2.output.bfile,
+        qtl_list=config["qtl_list"],
     output:
         qtl="results/{run_id}/{phenotype}/qtl/qtl.tsv",
         regions="results/{run_id}/{phenotype}/qtl/regions.txt",

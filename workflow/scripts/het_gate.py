@@ -61,7 +61,7 @@ for snp_id in loci:
     if len(informative) < min_strata:
         continue
 
-    # Match the association scan's NOIA centered encoding (--gm NC).
+    # NOIA centered encoding for QTL covariates and stratum slopes.
     encoded = gelexy.encode(
         genotype,
         gelexy.GeneticMode.A | gelexy.GeneticMode.D,

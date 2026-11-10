@@ -51,7 +51,8 @@ for full_summary, null_summary, locus in zip(
         {
             "locus": locus,
             "sigma2_sd": float(sd["estimate"]),
-            "se_sd": float(sd["se"]),
+            # Boundary components have '-' rather than a numeric SE.
+            "se_sd": pd.to_numeric(sd["se"], errors="coerce"),
             "ratio_sd": float(sd["ratio"]),
             "residual": resid_full,
             "logL_full": logl_full,
@@ -67,12 +68,35 @@ for full_summary, null_summary, locus in zip(
     )
 
 # degenerate fits have no valid p-value -> drop them entirely, do not report
-table = pd.DataFrame(rows)
-table = table[~table["degenerate"]].drop(columns="degenerate").reset_index(drop=True)
+table = pd.DataFrame(
+    rows,
+    columns=[
+        "locus",
+        "sigma2_sd",
+        "se_sd",
+        "ratio_sd",
+        "residual",
+        "logL_full",
+        "logL_null",
+        "LRT",
+        "p_lrt",
+        "za_ratio",
+        "za_constrained",
+        "zd_constrained",
+        "n_strata",
+        "degenerate",
+    ],
+)
+table = (
+    table.loc[~table["degenerate"].astype(bool)]
+    .drop(columns="degenerate")
+    .reset_index(drop=True)
+)
 
 # BH-FDR over the retained loci (statsmodels)
 table["fdr"] = np.nan
 table["classification"] = pd.Series(dtype=str)
+table["stable_support"] = pd.Series(dtype=str)
 if len(table):
     p = table["p_lrt"].to_numpy()
     _, fdr, _, _ = multipletests(p, alpha=ALPHA, method="fdr_bh")

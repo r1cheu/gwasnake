@@ -1,5 +1,7 @@
 # Create sample list and phenotype file for each phenotype
 rule create_sample_list:
+    input:
+        phenotype=config["phenotype"],
     output:
         sample_list="results/{run_id}/{phenotype}/common/sample.list",
         phenotype="results/{run_id}/{phenotype}/common/phenotype",
@@ -10,7 +12,7 @@ rule create_sample_list:
     run:
         import pandas as pd
 
-        phenotype = pd.read_csv(config["phenotype"], sep="\t")[
+        phenotype = pd.read_csv(input.phenotype, sep="\t")[
             ["FID", "IID", wildcards.phenotype]
         ].dropna()
         phenotype.to_csv(output.phenotype, sep="\t", index=False)
@@ -21,6 +23,7 @@ rule create_sample_list:
 rule extract_bed_step1:
     input:
         sample_list=rules.create_sample_list.output.sample_list,
+        bfile=multiext(config["bfile"]["step1"], ".bed", ".bim", ".fam"),
     output:
         bfile=temp(
             multiext(
@@ -46,6 +49,7 @@ rule extract_bed_step1:
 rule extract_bed_step2:
     input:
         sample_list=rules.create_sample_list.output.sample_list,
+        bfile=multiext(config["bfile"]["step2"], ".bed", ".bim", ".fam"),
     output:
         bfile=temp(
             multiext(
@@ -68,7 +72,7 @@ rule extract_bed_step2:
         """
 
 
-# Perform PCA analysis for covariates
+# Background PCs used for clustering samples into strata.
 rule pca:
     input:
         bfile=rules.extract_bed_step1.output.bfile,
@@ -86,7 +90,7 @@ rule pca:
         "../envs/plink2.yml"
     threads: config["plink2"]["pca_threads"]
     resources:
-        cpu_per_task=threads,
+        cpus_per_task=threads,
     params:
         bfile=rules.extract_bed_step1.params.output_prefix,
         comp=config["pca"],
@@ -95,17 +99,3 @@ rule pca:
         """
         plink2 --bfile {params.bfile} --pca {params.comp} --out {params.output_prefix} --threads {threads} &>{log}
         """
-
-
-# Clean PCA eigenvec file for use as covariates
-rule clean_pca_eigenvec:
-    input:
-        pca=rules.pca.output.pca,
-    output:
-        covar=temp("results/{run_id}/{phenotype}/common/qcovar"),
-    log:
-        "logs/{run_id}/{phenotype}/clean_pca.log",
-    conda:
-        "../envs/base.yml"
-    shell:
-        "sed '1s/^#//' {input} > {output} 2> {log}"
