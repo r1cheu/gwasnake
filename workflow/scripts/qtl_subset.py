@@ -6,7 +6,7 @@ from bed_reader import open_bed
 #   per_phenotype -> only this phenotype's rows
 #   all           -> every QTL in the list (deduped by SNP), one shared core-loci panel
 scope = snakemake.config["qtl_scope"]
-qtl = pd.read_csv(snakemake.config["qtl_list"], sep="\t")
+qtl = pd.read_csv(snakemake.input.qtl_list, sep="\t")
 if scope == "per_phenotype":
     qtl = qtl[qtl["PHENOTYPE"] == snakemake.wildcards.phenotype]
 elif scope != "all":
@@ -28,8 +28,8 @@ for k, idx in enumerate(qtl.index[col_idx.notna()]):
 qtl = qtl[n_classes == 3].reset_index(drop=True)
 qtl.to_csv(snakemake.output.qtl, sep="\t", index=False)
 
-# regions derive from the SAME gated set, so background removal, the QTL GRM, and the
-# fixed effects can never diverge. plink2 range format: CHR START END [set ID]
+# Regions of retained loci, in PLINK range format: CHR START END [set ID].
+# With qtl_scope=all, background exclusion instead uses the full input region list.
 qtl[["CHR", "START", "END", "SNP"]].to_csv(
     snakemake.output.regions, sep="\t", header=False, index=False
 )

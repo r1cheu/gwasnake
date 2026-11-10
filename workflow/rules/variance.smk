@@ -1,11 +1,6 @@
-# Variance partitioning: the QTL regions are captured by their own GRM (the
-# conditional GRM) instead of QTL fixed effects. REML with two GRM sources
-# (shared background + QTL region) splits genetic variance into background vs
-# QTL-region additive and dominance components.
-#
-# The QTL GRM is built from the SAME gated regions (qtl_subset.output.regions) that
-# qtl.smk removes from the background, so the two GRMs are a clean partition of step2
-# (no SNP shared) under either scope. The background is the shared background_grm.
+# Fit background and QTL-region additive/dominance GRMs as random effects.
+# QTL GRMs use regions of retained loci. Background GRMs exclude these regions
+# under per_phenotype, or every input QTL region under all; they never overlap.
 
 
 rule qtl_region_bfile:
@@ -77,7 +72,7 @@ rule reml_variance:
         bg_prefix=rules.background_grm.params.prefix,
         qtl_prefix=rules.qtl_region_grm.params.prefix,
         out_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.phenotype}/variance/reml",
-        transform=config["transform"]["variance"],
+        transform=config["transform"],
     shell:
         "gelex reml -p {input.phenotype} "
         "--random {params.bg_prefix}.A:g {params.qtl_prefix}.A:g {params.bg_prefix}.D:g {params.qtl_prefix}.D:g "

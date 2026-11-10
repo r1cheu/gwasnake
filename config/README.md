@@ -1,74 +1,25 @@
-# GWASnake Configuration
+# QTL-region variance
 
-This directory contains configuration files for the GWASnake workflow - a Snakemake workflow for genome-wide association study (GWAS) analysis.
+Configure `config.yaml` with:
 
-## Configuration Files
+- `phenotype`: TSV headed by `FID`, `IID`, and trait names; `phenotypes` selects traits.
+- `bfile.step2`: PLINK prefix. No step1 dataset or PCA is needed.
+- `qtl_list`: TSV columns `CHR SNP BP A1 A2 START END PHENOTYPE`, in that order.
+- `qtl_scope`: `per_phenotype` uses the current trait's QTL; `all` uses all loci
+  and excludes all input regions from the background.
+- `ld_prune`: two background LD-pruning settings.
+- `transform`: `none`, `dint`, or `iint`.
+- `run_id` and `gelex`: output identifier and thread counts.
 
-### config/config.yaml
+Only listed traits with QTL are targeted. Loci need all three genotype classes.
+QTL GRMs use SNPs in retained loci's regions; background GRMs exclude those
+regions (all input regions for `qtl_scope: all`). Both use NOIA standardized encoding.
 
-Main workflow configuration file containing:
+Output: `results/{run_id}/{phenotype}/variance/variance.tsv`.
 
-- **run_id**: Identifier for the current analysis run (e.g., "oh_ho")
-- **halfsib**: Path to sample grouping file
-- **phenotype**: Path to phenotype data file
-- **bfile**: Path to PLINK binary files directory
+Plot one or more result tables:
 
-### config/sample.csv
-
-Sample grouping file with the following structure:
-
-|                         |
-| ----------------------- |
-| sample1,sample2,sample3 |
-| sample4,sample5,sample6 |
-
-Each row defines a sample group for parallel processing.
-
-## Input Data Requirements
-
-### PLINK Binary Files
-
-Required files in the bfile/ directory:
-
-- .bed: Binary genotype data
-- .bim: Variant information
-- .fam: Sample information
-
-### Phenotype File
-
-Tab-separated file with columns, header is needed:
-
-- FID: Family ID
-- IID: Individual ID
-- phenotype: Phenotype values (e.g., heading_date)
-
-## Output Structure
-
-Results are organized by run_id and group:
-
+```bash
+pixi run python workflow/scripts/plot_grm_variance.py \
+    results/RUN/*/variance/variance.tsv -o results/RUN/variance.svg
 ```
-results/
-  {run_id}/
-    {group}/
-      common/
-        sample.list          # Filtered sample IDs
-        phenotype            # Filtered phenotype data
-      regenie/               # regenie output files
-      gcta/                  # gcta output files
-```
-
-## Customization
-
-### Adding New Groups
-
-1. Add group definition to config/sample.csv
-2. Update sample lists as comma-separated values
-
-### Changing Phenotype Analysis
-
-1. Update phenotype file path in config.yaml
-2. Ensure phenotype column name matches your data
-
-## Running the Workflow
-
-See the main project README for execution instructions. The workflow automatically uses configurations from this directory.

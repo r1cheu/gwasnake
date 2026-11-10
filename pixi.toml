@@ -18,8 +18,7 @@ python = "*"
 numpy = "*"
 pandas = "*"
 gelex = "==0.21.1"
-gelexy = "==0.2.2"
-scikit-learn = ">=1.9.0,<2"
+matplotlib = ">=3.10,<4"
 snakefmt = ">=2.0.3,<3"
 
 [pypi-dependencies]
