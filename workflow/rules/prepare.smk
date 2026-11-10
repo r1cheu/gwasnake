@@ -68,6 +68,36 @@ rule extract_bed_step2:
         """
 
 
+# Observed genome-wide heterozygosity, not the PLINK inbreeding coefficient F.
+rule heterozygosity:
+    input:
+        bfile=rules.extract_bed_step2.output.bfile,
+    output:
+        report=temp("results/{run_id}/{phenotype}/common/het.het"),
+        covar="results/{run_id}/{phenotype}/common/het.tsv",
+    log:
+        "logs/{run_id}/{phenotype}/heterozygosity.log",
+    conda:
+        "../envs/plink2.yml"
+    params:
+        bfile=rules.extract_bed_step2.params.output_prefix,
+        output_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.phenotype}/common/het",
+    shell:
+        """
+        plink2 --bfile {params.bfile} --het cols=fid,het,nobs \
+            --out {params.output_prefix} --threads 1 &>{log}
+        # Columns: FID, IID, O(HET), E(HET), OBS_CT.
+        awk 'BEGIN {{ OFS="\\t"; print "FID", "IID", "HET" }}
+             NR > 1 {{
+                 if ($5 <= 0) {{
+                     print "No observed genotypes for " $1 " " $2 > "/dev/stderr"
+                     exit 1
+                 }}
+                 print $1, $2, sprintf("%.10g", $3 / $5)
+             }}' {output.report} >{output.covar} 2>>{log}
+        """
+
+
 # Perform PCA analysis for covariates
 rule pca:
     input:

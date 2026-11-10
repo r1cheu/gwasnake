@@ -42,6 +42,7 @@ rule gelex_assoc:
     input:
         phenotype=rules.create_sample_list.output.phenotype,
         qcovar=rules.clean_pca_eigenvec.output.covar,
+        het=rules.heterozygosity.output.covar,
         bfile=rules.extract_bed_step2.output.bfile,
         grm=rules.gelex_grm.output,
     output:
@@ -58,7 +59,7 @@ rule gelex_assoc:
     shell:
         "gelex assoc -b {params.bfile_prefix} -p {input.phenotype} "
         "--mode AD --random {params.grm_prefix}.A:g {params.grm_prefix}.D:g "
-        "--transform {params.transform} --fixed {input.qcovar}:q --gm NC "
+        "--transform {params.transform} --fixed {input.qcovar}:q {input.het}:q --gm NC "
         "-o results/{wildcards.run_id}/{wildcards.phenotype}/assoc "
         "-t {threads} --loco &>{log}"
 

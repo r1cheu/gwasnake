@@ -17,7 +17,9 @@
 
 Both PLINK prefixes must have `.bed`, `.bim`, and `.fam` files. For each
 phenotype, samples with missing phenotype values are excluded before genotype
-extraction.
+extraction. PCA covariates and observed genome-wide heterozygosity from the
+extracted `step2` markers are included as fixed effects. Heterozygosity is the
+heterozygous/nonmissing genotype ratio, saved as `common/het.tsv` (`FID IID HET`).
 
 The workflow builds additive and dominance GRMs with NOIA standardized encoding
 (`NS`), then runs joint additive/dominance LOCO association with NOIA centered
