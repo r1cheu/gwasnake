@@ -1,9 +1,5 @@
-run_id: "variance_NS_25k"
+run_id: "gwas_NS"
 phenotype: "phenotype/sh_f1_restorer_new_replaced.phen"
-
-# which analyses rule all builds: any of gwas, conditional, variance, heterogeneity
-analyses:
-  - variance
 
 phenotypes:
   - PanicleNeckLength
@@ -19,44 +15,19 @@ phenotypes:
   - FullGrainNumber
 
 bfile:
+  # LD-filtered markers for PCA and both global/chromosome GRMs.
   step1: "bfile/valid_LDfilter"
+  # Markers tested in the association scan.
   step2: "bfile/valid"
-
-# optional CLASS column partitions QTL into variance classes (default: single class)
-qtl_list: "config/qtl_list_25k.tsv"
-
-# QTL regions removed from the background GRM (and, in variance, built into the
-# QTL GRM), shared by all non-GWAS analyses: all (whole qtl_list) | per_phenotype
-qtl_scope: all
-
-# two-step --indep-pairwise applied in order on the QTL-region-removed background
-ld_prune:
-  - "10kb 1 0.8"
-  - "50 1 0.8"
 
 pca: 5
 
 plink2:
   pca_threads: 1
 
-# global transform applied to every phenotype: iint | dint | none
-transform:
-  gwas: iint
-  conditional: none
-  qtl_grm: none
-  variance: none
-  heterogeneity: dint
-
-heterogeneity:
-  # genetic-background strata from k-means on the background PCs (config.pca)
-  n_strata: 12
-  het_min: 5
-  # minimum per stratum for EACH homozygote class (AA and aa counted separately)
-  hom_min: 3
-  # a locus is tested only if at least this many strata are three-class
-  min_strata: 6
+# Phenotype transformation for association: iint | dint | none.
+transform: iint
 
 gelex:
   grm_threads: 8
   assoc_threads: 8
-  reml_threads: 8

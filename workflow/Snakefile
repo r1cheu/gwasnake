@@ -1,73 +1,30 @@
-# Main entrypoint of the workflow.
-# Please follow the best practices:
-# https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
-# in particular regarding the standardized folder structure mentioned there.
-
-
-# load configuration
-# -----------------------------------------------------
+# GWAS: sample preparation, PCA, LOCO association, and Manhattan plots.
 configfile: "config/config.yaml"
 
 
 with open(config["phenotype"], "r") as f:
-    line = f.readline()
-    line = line.strip().split("\t")
-    if line[0] != "FID" and line[1] != "IID":
-        msg = "Make sure FID and IID in the first line of phenotype file. And split by tab."
-        raise ValueError(msg)
+    header = f.readline().strip().split("\t")
+    if header[:2] != ["FID", "IID"]:
+        raise ValueError(
+            "Phenotype file must be tab-separated and start with FID and IID."
+        )
 PHENOTYPE = config["phenotypes"]
 
 
-import pandas as pd
-
-_qtl = pd.read_csv(config["qtl_list"], sep="\t")
-# phenotypes that actually have QTL -> their locus (SNP) list
-QTL_LOCI = {
-    p: _qtl.loc[_qtl["PHENOTYPE"] == p, "SNP"].tolist()
-    for p in PHENOTYPE
-    if (_qtl["PHENOTYPE"] == p).any()
-}
-QTL_PHENOTYPE = list(QTL_LOCI)
-
-
-include: "rules/common.smk"
 include: "rules/prepare.smk"
 include: "rules/gwas.smk"
-include: "rules/qtl.smk"
-include: "rules/conditional.smk"
-include: "rules/variance.smk"
-include: "rules/heterogeneity.smk"
 
 
 onstart:
     print(f"Phenotypes: {PHENOTYPE}")
-    print(f"QTL phenotypes: {QTL_PHENOTYPE}")
-    print(f"Analyses: {config['analyses']}")
-
-
-# target rules
-# -----------------------------------------------------
-rule gwas:
-    input:
-        analysis_targets("gwas"),
-
-
-rule conditional:
-    input:
-        analysis_targets("conditional"),
-
-
-rule variance:
-    input:
-        analysis_targets("variance"),
-
-
-rule heterogeneity:
-    input:
-        analysis_targets("heterogeneity"),
 
 
 rule all:
     default_target: True
     input:
-        [t for analysis in config["analyses"] for t in analysis_targets(analysis)],
+        expand(
+            "results/{run_id}/{phenotype}/manhattan_{suffix}.png",
+            run_id=config["run_id"],
+            phenotype=PHENOTYPE,
+            suffix=["A", "D", "AD"],
+        ),

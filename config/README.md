@@ -1,74 +1,42 @@
-# GWASnake Configuration
+# GWAS configuration
 
-This directory contains configuration files for the GWASnake workflow - a Snakemake workflow for genome-wide association study (GWAS) analysis.
+`config/config.yaml` configures the GWAS workflow on `main`.
 
-## Configuration Files
+| Setting | Purpose |
+| --- | --- |
+| `run_id` | Output directory identifier; use a new value for a separate analysis. |
+| `phenotype` | Tab-separated phenotype file, with a header starting with `FID` and `IID`. |
+| `phenotypes` | Trait column names to analyze. |
+| `bfile.step1` | PLINK prefix for LD-filtered markers used for PCA and GRMs. |
+| `bfile.step2` | PLINK prefix for markers tested in association. |
+| `pca` | Number of principal components used as covariates. |
+| `transform` | Association phenotype transformation: `iint`, `dint`, or `none`. |
+| `plink2.pca_threads` | Threads for PCA. |
+| `gelex.grm_threads` | Threads for GRM construction. |
+| `gelex.assoc_threads` | Threads for association. |
 
-### config/config.yaml
+Both PLINK prefixes must have `.bed`, `.bim`, and `.fam` files. For each
+phenotype, samples with missing phenotype values are excluded before genotype
+extraction.
 
-Main workflow configuration file containing:
+The workflow builds additive and dominance GRMs with NOIA standardized encoding
+(`NS`), then runs joint additive/dominance LOCO association with NOIA centered
+encoding (`NC`). Both the global and chromosome-specific GRMs use `step1`.
+The current LOCO output declaration expects numeric chromosomes 1–12, grouped
+by chromosome, with markers remaining on each chromosome after filtering.
 
-- **run_id**: Identifier for the current analysis run (e.g., "oh_ho")
-- **halfsib**: Path to sample grouping file
-- **phenotype**: Path to phenotype data file
-- **bfile**: Path to PLINK binary files directory
+The default target produces three Manhattan plots per phenotype:
 
-### config/sample.csv
-
-Sample grouping file with the following structure:
-
-|                         |
-| ----------------------- |
-| sample1,sample2,sample3 |
-| sample4,sample5,sample6 |
-
-Each row defines a sample group for parallel processing.
-
-## Input Data Requirements
-
-### PLINK Binary Files
-
-Required files in the bfile/ directory:
-
-- .bed: Binary genotype data
-- .bim: Variant information
-- .fam: Sample information
-
-### Phenotype File
-
-Tab-separated file with columns, header is needed:
-
-- FID: Family ID
-- IID: Individual ID
-- phenotype: Phenotype values (e.g., heading_date)
-
-## Output Structure
-
-Results are organized by run_id and group:
-
-```
-results/
-  {run_id}/
-    {group}/
-      common/
-        sample.list          # Filtered sample IDs
-        phenotype            # Filtered phenotype data
-      regenie/               # regenie output files
-      gcta/                  # gcta output files
+```text
+results/{run_id}/{phenotype}/
+├── common/              # Sample selection, extracted genotypes, and PCA
+├── assoc.gwas.tsv       # Joint additive/dominance association results
+├── manhattan_A.png
+├── manhattan_D.png
+└── manhattan_AD.png
 ```
 
-## Customization
+Intermediate genotype, PCA, and GRM files are marked temporary and may be removed
+after downstream jobs complete. Logs are under `logs/{run_id}/{phenotype}/`.
 
-### Adding New Groups
-
-1. Add group definition to config/sample.csv
-2. Update sample lists as comma-separated values
-
-### Changing Phenotype Analysis
-
-1. Update phenotype file path in config.yaml
-2. Ensure phenotype column name matches your data
-
-## Running the Workflow
-
-See the main project README for execution instructions. The workflow automatically uses configurations from this directory.
+No QTL list, sample-group file, or analysis selector is required.

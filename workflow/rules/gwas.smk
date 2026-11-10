@@ -54,7 +54,7 @@ rule gelex_assoc:
     params:
         bfile_prefix=rules.extract_bed_step2.params.output_prefix,
         grm_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.phenotype}/grm",
-        transform=config["transform"]["gwas"],
+        transform=config["transform"],
     shell:
         "gelex assoc -b {params.bfile_prefix} -p {input.phenotype} "
         "--mode AD --random {params.grm_prefix}.A:g {params.grm_prefix}.D:g "
