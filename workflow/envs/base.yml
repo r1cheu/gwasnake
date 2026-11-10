@@ -6,6 +6,3 @@ dependencies:
   - coreutils
   - python=3.13
   - pandas=2.3.2
-  - numpy=2.3.2
-  - matplotlib=3.10.6
-  - statsmodels

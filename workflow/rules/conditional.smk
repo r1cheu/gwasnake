@@ -1,4 +1,4 @@
-# Task A: QTL as fixed effects, conditional on background + each other.
+# QTL as fixed effects, conditional on background and each other.
 
 
 rule make_qtl_covar:
@@ -35,7 +35,7 @@ rule reml_conditional:
     params:
         grm_prefix=rules.background_grm.params.prefix,
         out_prefix=lambda wildcards: f"results/{wildcards.run_id}/{wildcards.phenotype}/conditional/reml",
-        transform=config["transform"]["conditional"],
+        transform=config["transform"],
     shell:
         "gelex reml -p {input.phenotype} "
         "--random {params.grm_prefix}.A:g {params.grm_prefix}.D:g "
