@@ -1,6 +1,6 @@
 from pathlib import Path
 
-import gelex
+import gelexy
 import numpy as np
 import pandas as pd
 from bed_reader import open_bed
@@ -61,16 +61,18 @@ for snp_id in loci:
     if len(informative) < min_strata:
         continue
 
-    additive = np.copy(genotype, order="F")
-    dominant = np.copy(genotype, order="F")
-    gelex.encode_inplace(
-        additive, effect=gelex.GeneticMode.A, method=gelex.GenotypeMethod.NOIACenter
+    # Match the association scan's NOIA centered encoding (--gm NC).
+    encoded = gelexy.encode(
+        genotype,
+        gelexy.GeneticMode.A | gelexy.GeneticMode.D,
+        gelexy.EncodingOption(
+            parameterization=gelexy.Parameterization.Statistical,
+            frequencies=gelexy.GenotypeFrequencies.Observed,
+            scaling=gelexy.Scaling.Center,
+        ),
     )
-    gelex.encode_inplace(
-        dominant, effect=gelex.GeneticMode.D, method=gelex.GenotypeMethod.NOIACenter
-    )
-    additive = additive[:, 0]
-    dominant = dominant[:, 0]
+    additive = encoded[gelexy.GeneticMode.A][:, 0]
+    dominant = encoded[gelexy.GeneticMode.D][:, 0]
 
     # rows = all individuals; columns = three-class strata only
     incident = (

@@ -1,6 +1,6 @@
 import sys
 
-import gelex
+import gelexy
 import numpy as np
 import pandas as pd
 from bed_reader import open_bed
@@ -50,14 +50,18 @@ sid_idx = [sid_pos[s] for s in snp_ids]
 iids, row_idx = align_to_bed(bed, set(samples.index))
 
 genotype = bed.read(index=np.s_[row_idx, sid_idx], dtype="float64")
-additive = np.copy(genotype, order="F")
-dominant = np.copy(genotype, order="F")
-gelex.encode_inplace(
-    additive, effect=gelex.GeneticMode.A, method=gelex.GenotypeMethod.NOIACenter
+# NOIA centered (CLI --gm NC); defaults would use HWE and standardization.
+encoded = gelexy.encode(
+    genotype,
+    gelexy.GeneticMode.A | gelexy.GeneticMode.D,
+    gelexy.EncodingOption(
+        parameterization=gelexy.Parameterization.Statistical,
+        frequencies=gelexy.GenotypeFrequencies.Observed,
+        scaling=gelexy.Scaling.Center,
+    ),
 )
-gelex.encode_inplace(
-    dominant, effect=gelex.GeneticMode.D, method=gelex.GenotypeMethod.NOIACenter
-)
+additive = encoded[gelexy.GeneticMode.A]
+dominant = encoded[gelexy.GeneticMode.D]
 
 keep = full_rank_loci(additive, dominant)
 dropped = snp_ids[~keep]

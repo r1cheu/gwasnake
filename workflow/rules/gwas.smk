@@ -17,7 +17,7 @@ rule gelex_grm:
         ),
         loco=temp(
             expand(
-                "results/{{run_id}}/{{phenotype}}/grm.chr{chr:02d}.{grm_type}.{ext}",
+                "results/{{run_id}}/{{phenotype}}/grm.{grm_type}.chr{chr:02d}.{ext}",
                 grm_type=["A", "D"],
                 chr=range(1, 13),
                 ext=["bin", "id"],
@@ -57,8 +57,8 @@ rule gelex_assoc:
         transform=config["transform"]["gwas"],
     shell:
         "gelex assoc -b {params.bfile_prefix} -p {input.phenotype} "
-        "--mode AD --grm {params.grm_prefix}.A {params.grm_prefix}.D "
-        "--transform {params.transform} --qcovar {input.qcovar} --gm NC "
+        "--mode AD --random {params.grm_prefix}.A:g {params.grm_prefix}.D:g "
+        "--transform {params.transform} --fixed {input.qcovar}:q --gm NC "
         "-o results/{wildcards.run_id}/{wildcards.phenotype}/assoc "
         "-t {threads} --loco &>{log}"
 

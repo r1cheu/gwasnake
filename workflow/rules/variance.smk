@@ -80,7 +80,7 @@ rule reml_variance:
         transform=config["transform"]["variance"],
     shell:
         "gelex reml -p {input.phenotype} "
-        "--grm {params.bg_prefix}.A {params.qtl_prefix}.A {params.bg_prefix}.D {params.qtl_prefix}.D "
+        "--random {params.bg_prefix}.A:g {params.qtl_prefix}.A:g {params.bg_prefix}.D:g {params.qtl_prefix}.D:g "
         "--transform {params.transform} "
         "-o {params.out_prefix} -t {threads} &>{log}"
 

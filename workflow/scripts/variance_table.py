@@ -3,21 +3,22 @@ import pandas as pd
 summary = pd.read_csv(snakemake.input.summary, sep="\t")
 var = summary[summary["type"] == "variance"].copy()
 var["estimate"] = var["estimate"].astype(float)
-var["se"] = var["se"].astype(float)
+# Gelex reports '-' for the SE of fixed or boundary variance components.
+var["se"] = pd.to_numeric(var["se"], errors="coerce")
 total = var["estimate"].sum()
 
 
 def component_name(term):
     if term == "Residual":
         return "residual"
-    base = term.rsplit("/", 1)[-1]  # background.add | qtl_region.dom
+    base = term.rsplit("/", 1)[-1]  # background.A | qtl_region.D
     src, mode = base.rsplit(".", 1)
     return f"{'qtl' if src == 'qtl_region' else src}_{mode}"
 
 
 var["component"] = var["term"].map(component_name)
 # gelex normalizes each GRM by trace/n, so ratio (share of total variance) is the
-# comparable quantity across components; qtl PVE = qtl_add ratio + qtl_dom ratio
+# comparable quantity across components; qtl PVE = qtl_A ratio + qtl_D ratio
 var["ratio"] = var["estimate"] / total
 var["ratio_se"] = pd.to_numeric(var["ratio_se"], errors="coerce")
 

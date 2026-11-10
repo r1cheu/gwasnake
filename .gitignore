@@ -12,7 +12,8 @@ workflow/notebooks/.ipynb_checkpoints/**
 **/Rplots.pdf
 **/bfile/**
 **/phenotype/**
-workflow/scripts/__pycache__
+__pycache__/
+*.py[cod]
 CLAUDE.md
 # pixi environments
 .pixi/*

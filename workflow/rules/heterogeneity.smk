@@ -46,8 +46,8 @@ rule reml_het_null:
         transform=config["transform"]["heterogeneity"],
     shell:
         "gelex reml -p {input.phenotype} "
-        "--grm {params.grm_prefix}.A {params.grm_prefix}.D "
-        "--qcovar {input.qcovar} --qrand {input.za} "
+        "--random {params.grm_prefix}.A:g {params.grm_prefix}.D:g {input.za}:q "
+        "--fixed {input.qcovar}:q "
         "--transform {params.transform} "
         "-o {params.out_prefix} -t {threads} &>{log} || {{ "
         "printf 'term\\ttype\\testimate\\tse\\tratio\\tratio_se\\tpvalue\\n"
@@ -80,8 +80,8 @@ rule reml_het_full:
         transform=config["transform"]["heterogeneity"],
     shell:
         "gelex reml -p {input.phenotype} "
-        "--grm {params.grm_prefix}.A {params.grm_prefix}.D "
-        "--qcovar {input.qcovar} --qrand {input.za} {input.zd} "
+        "--random {params.grm_prefix}.A:g {params.grm_prefix}.D:g {input.za}:q {input.zd}:q "
+        "--fixed {input.qcovar}:q "
         "--transform {params.transform} "
         "-o {params.out_prefix} -t {threads} &>{log} || {{ "
         "printf 'term\\ttype\\testimate\\tse\\tratio\\tratio_se\\tpvalue\\n"

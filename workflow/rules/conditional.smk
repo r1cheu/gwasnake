@@ -38,8 +38,8 @@ rule reml_conditional:
         transform=config["transform"]["conditional"],
     shell:
         "gelex reml -p {input.phenotype} "
-        "--grm {params.grm_prefix}.A {params.grm_prefix}.D "
-        "--qcovar {input.qcovar} "
+        "--random {params.grm_prefix}.A:g {params.grm_prefix}.D:g "
+        "--fixed {input.qcovar}:q "
         "--transform {params.transform} "
         "-o {params.out_prefix} -t {threads} &>{log}"
 
